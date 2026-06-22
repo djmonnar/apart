@@ -163,7 +163,7 @@ export function BenefitDetail({
           <LockedActionPanel level={level} />
         ) : (
           <>
-            <CouponPanel benefit={view} />
+            <CouponPanel benefit={view} partner={partner} />
             <p className="mt-3 px-1 text-center text-xs leading-relaxed text-ink-faint">
               제휴 매장에는 쿠폰의 유효성만 전달되며,
               <br />

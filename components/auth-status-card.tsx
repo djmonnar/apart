@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ShieldCheck, ShieldAlert, Clock3, ChevronRight } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { MEMBER_STATUS_META } from "@/lib/constants";
+import { formatFirestoreDate } from "@/lib/format";
 
 const TONE: Record<string, string> = {
   neutral: "bg-sand-200 text-brand-500",
@@ -13,10 +14,20 @@ const TONE: Record<string, string> = {
 };
 
 export function AuthStatusCard() {
-  const { status, user } = useAuth();
-  const meta = MEMBER_STATUS_META[status];
+  const { accessLevel, status, profile, user } = useAuth();
+  const meta =
+    accessLevel === "admin"
+      ? { label: "관리자", tone: "success" as const }
+      : MEMBER_STATUS_META[status];
 
+  const viewKey = accessLevel === "admin" ? "admin" : status;
   const view = {
+    admin: {
+      icon: ShieldCheck,
+      title: "관리자 계정입니다",
+      desc: "입주민 승인과 서비스 운영 기능을\n이용하실 수 있습니다.",
+      cta: { label: "관리자 화면", href: "/admin" },
+    },
     guest: {
       icon: ShieldAlert,
       title: "미인증 상태입니다",
@@ -32,7 +43,7 @@ export function AuthStatusCard() {
     approved: {
       icon: ShieldCheck,
       title: "인증 완료 입주민입니다",
-      desc: "모든 제휴 혜택과 쿠폰을\n자유롭게 이용하실 수 있습니다.",
+      desc: "입주민 인증이 완료되었습니다.\n모든 혜택과 공동구매를 이용하실 수 있습니다.",
       cta: { label: "마이페이지 보기", href: "/mypage" },
     },
     rejected: {
@@ -41,7 +52,13 @@ export function AuthStatusCard() {
       desc: "입력 정보를 확인 후 다시 신청해 주세요.",
       cta: { label: "다시 신청하기", href: "/signup" },
     },
-  }[status];
+    suspended: {
+      icon: ShieldAlert,
+      title: "이용이 일시 정지되었습니다",
+      desc: "관리자 확인이 필요합니다.\n고객센터로 문의해 주세요.",
+      cta: { label: "마이페이지 보기", href: "/mypage" },
+    },
+  }[viewKey];
 
   const Icon = view.icon;
 
@@ -81,11 +98,17 @@ export function AuthStatusCard() {
         </div>
         <div className="flex items-center justify-between">
           <dt className="text-ink-faint">신청일</dt>
-          <dd className="font-medium text-ink">{user?.appliedAt ?? "-"}</dd>
+          <dd className="font-medium text-ink">
+            {formatFirestoreDate(profile?.createdAt)}
+          </dd>
         </div>
         <div className="flex items-center justify-between">
           <dt className="text-ink-faint">최근 로그인</dt>
-          <dd className="font-medium text-ink">{user?.lastLoginAt ?? "-"}</dd>
+          <dd className="font-medium text-ink">
+            {user?.metadata.lastSignInTime
+              ? new Date(user.metadata.lastSignInTime).toISOString().slice(0, 10)
+              : "-"}
+          </dd>
         </div>
       </dl>
 

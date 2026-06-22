@@ -51,14 +51,19 @@ export const MEMBER_STATUS_META: Record<
   pending: { label: "승인 대기", tone: "warning" },
   approved: { label: "인증 완료", tone: "success" },
   rejected: { label: "반려", tone: "danger" },
+  suspended: { label: "이용 정지", tone: "danger" },
 };
 
 export const SERVICE_NAME = "진주역 스카이시티프라디움 입주민 복지몰";
 export const INTERNAL_NAME = "단지라운지";
 
 import type {
+  ApartmentInquiryRole,
+  ApartmentInquiryStatus,
+  CouponStatus,
   GroupBuyStatus,
   GroupBuyApplicationStatus,
+  PartnerInquiryStatus,
 } from "./types";
 
 type Tone = "neutral" | "info" | "warning" | "success" | "danger";
@@ -84,7 +89,45 @@ export const GROUP_BUY_APPLICATION_META: Record<
   applied: { label: "신청완료", tone: "info" },
   checking: { label: "확인중", tone: "warning" },
   confirmed: { label: "확정", tone: "success" },
-  canceled: { label: "취소", tone: "danger" },
+  cancelled: { label: "취소", tone: "danger" },
+};
+
+export const APARTMENT_INQUIRY_ROLE_LABEL: Record<
+  ApartmentInquiryRole,
+  string
+> = {
+  residentRepresentative: "입주자대표회",
+  managementOffice: "관리사무소",
+  resident: "입주민",
+  etc: "기타",
+};
+
+export const APARTMENT_INQUIRY_STATUS_META: Record<
+  ApartmentInquiryStatus,
+  { label: string; tone: Tone }
+> = {
+  new: { label: "신규", tone: "info" },
+  checking: { label: "확인중", tone: "warning" },
+  done: { label: "처리완료", tone: "success" },
+};
+
+export const PARTNER_INQUIRY_STATUS_META: Record<
+  PartnerInquiryStatus,
+  { label: string; tone: Tone }
+> = {
+  new: { label: "신규", tone: "info" },
+  checking: { label: "확인중", tone: "warning" },
+  done: { label: "처리완료", tone: "success" },
+};
+
+export const COUPON_STATUS_META: Record<
+  CouponStatus,
+  { label: string; tone: Tone }
+> = {
+  issued: { label: "사용 가능", tone: "success" },
+  used: { label: "사용 완료", tone: "neutral" },
+  expired: { label: "만료", tone: "danger" },
+  cancelled: { label: "취소", tone: "warning" },
 };
 
 /** 톤 → Tailwind 클래스 (뱃지용) */

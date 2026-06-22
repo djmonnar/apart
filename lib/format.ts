@@ -21,3 +21,26 @@ export function formatDiscount(
   if (percent <= 0) return null;
   return `${percent}% 할인`;
 }
+
+export function formatFirestoreDate(value: unknown): string {
+  if (!value) return "-";
+
+  if (typeof value === "string") {
+    return value.slice(0, 10);
+  }
+
+  if (value instanceof Date) {
+    return value.toISOString().slice(0, 10);
+  }
+
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    "toDate" in value &&
+    typeof (value as { toDate: unknown }).toDate === "function"
+  ) {
+    return (value as { toDate: () => Date }).toDate().toISOString().slice(0, 10);
+  }
+
+  return "-";
+}

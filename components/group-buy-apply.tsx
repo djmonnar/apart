@@ -2,23 +2,33 @@
 
 import { useEffect, useState } from "react";
 import {
+  AlertCircle,
   X,
   CheckCircle2,
+  Loader2,
   ShieldCheck,
   UserRound,
   Send,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { canApplyGroupBuy } from "@/lib/access";
+import { createGroupBuyApplication } from "@/lib/group-buy-applications";
+import { firebaseAuthErrorMessage } from "@/lib/auth-errors";
 
 /**
  * 공동구매 참여 신청 버튼 + 모달.
  * 승인 완료 입주민만 신청 실행 가능. 회원 정보(이름/연락처/동/호수)는 자동 입력.
  * 신청 정보는 관리자만 확인하며, 제휴업체에는 개인정보가 제공되지 않는다.
  */
-export function GroupBuyApply({ title }: { title: string }) {
-  const { user } = useAuth();
-  const allowed = canApplyGroupBuy(user);
+export function GroupBuyApply({
+  groupBuyId,
+  title,
+}: {
+  groupBuyId: string;
+  title: string;
+}) {
+  const { accessLevel, profile } = useAuth();
+  const allowed = accessLevel === "admin" || canApplyGroupBuy(profile);
   const [open, setOpen] = useState(false);
 
   return (
@@ -50,29 +60,39 @@ export function GroupBuyApply({ title }: { title: string }) {
       </div>
 
       {open && (
-        <ApplyModal title={title} onClose={() => setOpen(false)} />
+        <ApplyModal
+          groupBuyId={groupBuyId}
+          title={title}
+          onClose={() => setOpen(false)}
+        />
       )}
     </>
   );
 }
 
 function ApplyModal({
+  groupBuyId,
   title,
   onClose,
 }: {
+  groupBuyId: string;
   title: string;
   onClose: () => void;
 }) {
-  const { user } = useAuth();
+  const { accessLevel, profile, user } = useAuth();
+  const allowed = accessLevel === "admin" || canApplyGroupBuy(profile);
   const [form, setForm] = useState({
-    name: user?.name ?? "",
-    phone: user?.phone ?? "",
-    building: user?.dong ?? "",
-    unit: user?.ho ?? "",
+    name: profile?.name ?? "",
+    phone: profile?.phone ?? "",
+    building: profile?.building ?? "",
+    unit: profile?.unit ?? "",
     memo: "",
   });
   const [agree, setAgree] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const update = (key: keyof typeof form) => (v: string) =>
     setForm((f) => ({ ...f, [key]: v }));
@@ -88,11 +108,50 @@ function ApplyModal({
     };
   }, [onClose]);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!agree) return;
-    // 목업: 실제로는 서버로 신청 전송 (관리자만 열람)
-    setSubmitted(true);
+    setError(null);
+    setNotice(null);
+
+    if (!allowed || !user) {
+      setError("승인 완료 입주민만 공동구매를 신청할 수 있습니다.");
+      return;
+    }
+
+    if (!agree) {
+      setError("개인정보 수집 및 이용에 동의해 주세요.");
+      return;
+    }
+
+    if (!form.name.trim() || !form.phone.trim() || !form.building.trim() || !form.unit.trim()) {
+      setError("이름, 연락처, 동, 호수를 모두 입력해 주세요.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const result = await createGroupBuyApplication({
+        groupBuyId,
+        groupBuyTitle: title,
+        userId: user.uid,
+        userName: form.name.trim(),
+        phone: form.phone.trim(),
+        building: form.building.trim(),
+        unit: form.unit.trim(),
+        memo: form.memo.trim(),
+      });
+
+      if (result === "duplicate") {
+        setNotice("이미 신청한 공동구매입니다. 마이페이지에서 신청 내역을 확인해주세요.");
+        return;
+      }
+
+      setSubmitted(true);
+    } catch (err) {
+      setError(firebaseAuthErrorMessage(err));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -116,7 +175,7 @@ function ApplyModal({
               공동구매 신청이 완료되었습니다
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-              모집 마감 후 순차적으로 안내드리겠습니다.
+              공동구매 신청이 완료되었습니다. 모집 마감 후 순차적으로 안내드리겠습니다.
               <br />
               신청 내역은 마이페이지에서 확인하실 수 있습니다.
             </p>
@@ -187,9 +246,31 @@ function ApplyModal({
                 </span>
               </label>
 
-              <button type="submit" disabled={!agree} className="btn-primary w-full">
-                <ShieldCheck className="h-4 w-4" aria-hidden />
-                신청 완료하기
+              {notice && (
+                <p className="flex items-start gap-1.5 rounded-xl bg-amber-50 px-3.5 py-2.5 text-xs leading-relaxed text-amber-700">
+                  <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+                  {notice}
+                </p>
+              )}
+
+              {error && (
+                <p className="flex items-start gap-1.5 rounded-xl bg-rose-50 px-3.5 py-2.5 text-xs leading-relaxed text-rose-600">
+                  <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+                  {error}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={!agree || submitting}
+                className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {submitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                ) : (
+                  <ShieldCheck className="h-4 w-4" aria-hidden />
+                )}
+                {submitting ? "신청 저장 중..." : "신청 완료하기"}
               </button>
             </form>
           </>

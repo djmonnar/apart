@@ -17,11 +17,11 @@ import {
   getGroupBuyLockMeta,
 } from "@/lib/access";
 import { GROUP_BUY_STATUS_META, TONE_CLASS } from "@/lib/constants";
-import { getProgressPercent } from "@/data/group-buys";
 import { formatDiscount } from "@/lib/format";
 import { SafeImage } from "./safe-image";
-import { ProgressBar, StatusBadge } from "./progress-bar";
+import { StatusBadge } from "./progress-bar";
 import { GroupBuyApply } from "./group-buy-apply";
+import { GroupBuyLiveProgress } from "./group-buy-live-progress";
 
 const APPLY_CONDITIONS = [
   "진주역 스카이시티프라디움 인증 입주민",
@@ -216,42 +216,18 @@ export function GroupBuyDetail({
               {view.groupPrice}
             </p>
 
-            <div className="mt-5">
-              <ProgressBar
-                current={view.currentCount}
-                target={view.targetCount}
-                percent={getProgressPercent(view)}
-                closingSoon={closingSoon}
-              />
-            </div>
-
-            <dl className="mt-5 space-y-2.5 border-t border-line pt-4 text-sm">
-              <div className="flex items-center justify-between">
-                <dt className="text-ink-faint">상태</dt>
-                <dd>
-                  <span className={`badge ${TONE_CLASS[statusMeta.tone]}`}>
-                    {statusMeta.label}
-                  </span>
-                </dd>
-              </div>
-              <div className="flex items-center justify-between">
-                <dt className="text-ink-faint">목표 인원</dt>
-                <dd className="font-medium text-ink">{view.targetCount}세대</dd>
-              </div>
-              <div className="flex items-center justify-between">
-                <dt className="text-ink-faint">현재 신청</dt>
-                <dd className="font-medium text-ink">{view.currentCount}세대</dd>
-              </div>
-              <div className="flex items-center justify-between">
-                <dt className="text-ink-faint">마감일</dt>
-                <dd className="font-medium text-ink">
-                  {view.endDate.replace(/-/g, ".")}
-                </dd>
-              </div>
-            </dl>
+            <GroupBuyLiveProgress
+              groupBuyId={view.id}
+              fallbackCurrent={view.currentCount}
+              targetCount={view.targetCount}
+              closingSoon={closingSoon}
+              statusLabel={statusMeta.label}
+              statusToneClass={TONE_CLASS[statusMeta.tone]}
+              endDate={view.endDate}
+            />
 
             <div className="mt-5">
-              <GroupBuyApply title={view.title} />
+              <GroupBuyApply groupBuyId={view.id} title={view.title} />
             </div>
             <p className="mt-3 text-center text-xs leading-relaxed text-ink-faint">
               신청 정보는 관리자만 확인하며,

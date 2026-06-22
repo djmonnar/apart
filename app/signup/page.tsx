@@ -16,8 +16,8 @@ export default function SignupPage() {
     email: "",
     password: "",
     name: "",
-    dong: "",
-    ho: "",
+    building: "",
+    unit: "",
     phone: "",
   });
   const [agree, setAgree] = useState(false);
@@ -29,11 +29,23 @@ export default function SignupPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!agree) return;
     setError(null);
+
+    if (!agree) {
+      setError("개인정보 수집·이용에 동의해 주세요.");
+      return;
+    }
+
+    const missing = Object.entries(form).some(([, value]) => !value.trim());
+    if (missing) {
+      setError("필수 항목을 모두 입력해 주세요.");
+      return;
+    }
+
     setSubmitting(true);
     try {
       await signup(form);
+      window.alert("가입 신청이 완료되었습니다. 관리자 승인 후 혜택을 이용하실 수 있습니다.");
       router.push("/mypage");
     } catch (err) {
       setError(firebaseAuthErrorMessage(err));
@@ -66,6 +78,7 @@ export default function SignupPage() {
                 src="/assets/signup-flow.png"
                 alt="회원가입 및 혜택 선택 흐름 안내"
                 sizes="(max-width: 1024px) 100vw, 40vw"
+                priority
               />
             </div>
 
@@ -108,8 +121,18 @@ export default function SignupPage() {
               </div>
 
               <div className="mt-4 grid grid-cols-2 gap-4">
-                <Field label="동" value={form.dong} onChange={update("dong")} placeholder="101" />
-                <Field label="호수" value={form.ho} onChange={update("ho")} placeholder="1203" />
+                <Field
+                  label="동"
+                  value={form.building}
+                  onChange={update("building")}
+                  placeholder="101"
+                />
+                <Field
+                  label="호수"
+                  value={form.unit}
+                  onChange={update("unit")}
+                  placeholder="1203"
+                />
               </div>
               <div className="mt-4 space-y-4">
                 <Field

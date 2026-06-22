@@ -11,6 +11,7 @@ const NAV = [
   { label: "복지몰 홈", href: "/" },
   { label: "혜택 안내", href: "/benefits" },
   { label: "공동구매", href: "/group-buy" },
+  { label: "아파트 도입문의", href: "/apartment" },
   { label: "이용 가이드", href: "/#guide" },
   { label: "공지사항", href: "/#notice" },
   { label: "자주 묻는 질문", href: "/#faq" },
@@ -29,18 +30,20 @@ export function SiteHeader() {
           <BrandMark />
         </Link>
 
-        <nav className="hidden items-center gap-1 lg:flex" aria-label="주요 메뉴">
+        <nav className="hidden items-center gap-0 lg:flex xl:gap-1" aria-label="주요 메뉴">
           {NAV.map((item) => {
+            const baseHref = item.href.split("#")[0];
             const active =
               item.href === "/"
                 ? pathname === "/"
-                : pathname.startsWith(item.href.split("#")[0]) &&
-                  item.href !== "/";
+                : item.href.includes("#")
+                  ? pathname === baseHref
+                  : pathname.startsWith(baseHref);
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`rounded-lg px-3.5 py-2 text-sm font-medium transition-colors ${
+                className={`rounded-lg px-2.5 py-2 text-sm font-medium transition-colors xl:px-3.5 ${
                   active
                     ? "text-brand-700"
                     : "text-ink-soft hover:text-brand-700"

@@ -22,8 +22,14 @@ export default function LoginPage() {
     setError(null);
     setSubmitting(true);
     try {
-      await login(email, password);
-      router.push("/mypage");
+      const next = await login(email, password);
+      if (next.accessLevel === "admin") {
+        router.push("/admin");
+      } else if (next.accessLevel === "approved") {
+        router.push("/");
+      } else {
+        router.push("/mypage");
+      }
     } catch (err) {
       setError(firebaseAuthErrorMessage(err));
       setSubmitting(false);

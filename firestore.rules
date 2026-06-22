@@ -6,40 +6,232 @@ service cloud.firestore {
     function isSignedIn() {
       return request.auth != null;
     }
-    function isAdmin() {
-      return isSignedIn() && request.auth.token.admin == true;
-    }
+
     function isOwner(uid) {
       return isSignedIn() && request.auth.uid == uid;
     }
 
-    // 입주민 프로필
-    // - 본인 또는 관리자만 열람
-    // - 본인은 'pending' 상태로만 생성 가능 (본인 uid 일치)
-    // - 본인은 status를 변경할 수 없고, 승인/반려는 관리자만 가능
+    function isAdmin() {
+      return isSignedIn()
+        && (
+          request.auth.token.admin == true
+          // 초기 개발용 임시 관리자 이메일. 배포 전 실제 이메일로 바꾸거나 custom claim을 사용하세요.
+          || request.auth.token.email in ['djmonnar4@gmail.com']
+          || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+        );
+    }
+
+    function signedInUserProfile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isApprovedResident() {
+      return isSignedIn()
+        && signedInUserProfile().apartmentId == 'pradium'
+        && signedInUserProfile().approvalStatus == 'approved';
+    }
+
+    function validUserCreate(uid) {
+      return request.resource.data.keys().hasOnly([
+          'uid',
+          'email',
+          'name',
+          'phone',
+          'building',
+          'unit',
+          'apartmentId',
+          'role',
+          'approvalStatus',
+          'createdAt',
+          'approvedAt',
+          'approvedBy'
+        ])
+        && request.resource.data.uid == uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.apartmentId == 'pradium'
+        && request.resource.data.role == 'resident'
+        && request.resource.data.approvalStatus == 'pending'
+        && request.resource.data.approvedAt == null
+        && request.resource.data.approvedBy == null;
+    }
+
+    function userSelfUpdateKeepsProtectedFields() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'uid',
+          'email',
+          'apartmentId',
+          'role',
+          'approvalStatus',
+          'approvedAt',
+          'approvedBy'
+        ]);
+    }
+
+    // 입주민/관리자/파트너 프로필
     match /users/{uid} {
       allow read: if isOwner(uid) || isAdmin();
-      allow create: if isOwner(uid)
-                    && request.resource.data.uid == uid
-                    && request.resource.data.status == 'pending';
+      allow create: if isOwner(uid) && validUserCreate(uid);
       allow update: if isAdmin()
-                    || (isOwner(uid)
-                        && request.resource.data.status == resource.data.status);
+                    || (isOwner(uid) && userSelfUpdateKeepsProtectedFields());
       allow delete: if isAdmin();
     }
 
+    function validGroupBuyApplicationCreate(appId) {
+      return request.resource.data.keys().hasOnly([
+          'id',
+          'groupBuyId',
+          'groupBuyTitle',
+          'apartmentId',
+          'userId',
+          'userName',
+          'phone',
+          'building',
+          'unit',
+          'memo',
+          'status',
+          'createdAt',
+          'updatedAt'
+        ])
+        && appId == request.resource.data.groupBuyId + '_' + request.auth.uid
+        && request.resource.data.id == appId
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.apartmentId == 'pradium'
+        && request.resource.data.status == 'applied'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    function userCancelsOwnApplication() {
+      return isSignedIn()
+        && resource.data.userId == request.auth.uid
+        && resource.data.status in ['applied', 'checking']
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status',
+          'updatedAt'
+        ])
+        && request.resource.data.status == 'cancelled'
+        && request.resource.data.updatedAt == request.time;
+    }
+
     // 공동구매 신청
-    // - 본인 신청만 생성, 본인/관리자만 열람
-    // - 상태 변경/삭제는 관리자만 (업체에는 노출되지 않음)
     match /groupBuyApplications/{appId} {
       allow read: if isAdmin()
                   || (isSignedIn() && resource.data.userId == request.auth.uid);
-      allow create: if isSignedIn()
-                    && request.resource.data.userId == request.auth.uid;
+      allow create: if (isAdmin() || isApprovedResident())
+                    && validGroupBuyApplicationCreate(appId);
+      allow update: if isAdmin() || userCancelsOwnApplication();
+      allow delete: if isAdmin();
+    }
+
+    function validApartmentInquiryCreate() {
+      return request.resource.data.keys().hasOnly([
+          'apartmentName',
+          'region',
+          'householdCount',
+          'contactName',
+          'role',
+          'phone',
+          'message',
+          'internalMemo',
+          'status',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.apartmentName is string
+        && request.resource.data.region is string
+        && request.resource.data.householdCount is string
+        && request.resource.data.contactName is string
+        && request.resource.data.role in [
+          'residentRepresentative',
+          'managementOffice',
+          'resident',
+          'etc'
+        ]
+        && request.resource.data.phone is string
+        && request.resource.data.message is string
+        && request.resource.data.internalMemo == ''
+        && request.resource.data.status == 'new'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    match /apartmentInquiries/{inquiryId} {
+      allow create: if validApartmentInquiryCreate();
+      allow read, update, delete: if isAdmin();
+    }
+
+    function validPartnerInquiryCreate() {
+      return request.resource.data.keys().hasOnly([
+          'businessName',
+          'category',
+          'contactName',
+          'phone',
+          'region',
+          'message',
+          'internalMemo',
+          'status',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.businessName is string
+        && request.resource.data.category is string
+        && request.resource.data.contactName is string
+        && request.resource.data.phone is string
+        && request.resource.data.region is string
+        && request.resource.data.message is string
+        && request.resource.data.internalMemo == ''
+        && request.resource.data.status == 'new'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    match /partnerInquiries/{inquiryId} {
+      allow create: if validPartnerInquiryCreate();
+      allow read, update, delete: if isAdmin();
+    }
+
+    function validCouponCreate(couponId) {
+      return request.resource.data.keys().hasOnly([
+          'id',
+          'code',
+          'apartmentId',
+          'userId',
+          'benefitId',
+          'benefitTitle',
+          'partnerId',
+          'partnerName',
+          'status',
+          'issuedAt',
+          'expiresAt',
+          'usedAt',
+          'usedByPartnerId',
+          'usedByPartnerName'
+        ])
+        && request.resource.data.id == couponId
+        && request.resource.data.code is string
+        && request.resource.data.apartmentId == 'pradium'
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.benefitId is string
+        && request.resource.data.benefitTitle is string
+        && request.resource.data.partnerId is string
+        && request.resource.data.partnerName is string
+        && request.resource.data.status == 'issued'
+        && request.resource.data.issuedAt == request.time
+        && request.resource.data.expiresAt is timestamp
+        && request.resource.data.expiresAt > request.time
+        && request.resource.data.usedAt == null
+        && request.resource.data.usedByPartnerId == null
+        && request.resource.data.usedByPartnerName == null;
+    }
+
+    match /coupons/{couponId} {
+      allow read: if isAdmin()
+                  || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if (isAdmin() || isApprovedResident())
+                    && validCouponCreate(couponId);
       allow update, delete: if isAdmin();
     }
 
-    // 그 외 모든 문서는 기본 차단
     match /{document=**} {
       allow read, write: if false;
     }

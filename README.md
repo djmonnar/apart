@@ -8,7 +8,8 @@
 - **Tailwind CSS** (따뜻한 크림/베이지/브라운 디자인 토큰)
 - **Pretendard** (한글 가변 폰트, CDN 다이내믹 서브셋)
 - **lucide-react** (라인 아이콘)
-- 백엔드 없이 **mock 데이터**로 동작 (실서비스 확장 시 데이터 레이어만 교체)
+- **Firebase Auth + Firestore users 컬렉션** (입주민 가입/로그인/관리자 승인)
+- 혜택/공동구매 콘텐츠는 **mock 데이터** 유지 (실서비스 확장 시 데이터 레이어만 교체)
 
 ## 실행
 
@@ -42,18 +43,50 @@ lib/
   types.ts          # 도메인 타입
   constants.ts      # 카테고리·상태 메타, 서비스명
   queries.ts        # 혜택+업체 조인 뷰 모델
-  auth-context.tsx  # 목업 인증 컨텍스트(guest/pending/approved)
+  auth-context.tsx  # Firebase Auth + Firestore 프로필 기반 인증 컨텍스트
 data/               # mock 데이터 (apartments/users/partners/benefits/coupons/notices)
 public/assets/      # 이미지 자산 (아파트 외관, 업체 사진 등)
 ```
 
+## 환경변수
+
+`.env.example`을 참고해 `.env.local`에 Firebase 웹 앱 설정을 넣어야 가입/로그인이 동작합니다.
+
+```bash
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
+NEXT_PUBLIC_ADMIN_EMAILS=djmonnar4@gmail.com
+```
+
 ## 인증 상태 모델
 
-소비자 인증 상태는 `guest → pending(승인대기) → approved(승인완료)`.
+소비자 인증 상태는 Firebase Auth 사용자와 Firestore `users/{uid}` 문서 기준으로
+`guest → pending(승인대기) → approved(승인완료)`를 판단합니다.
 - **미승인**: 혜택 열람은 가능하지만 쿠폰 발급/사용 불가
 - **승인완료**: 혜택 상세에서 1회용 쿠폰번호/QR 발급
 
-> 우측 하단 **「데모 상태 전환」** 버튼으로 상태별 화면을 즉시 미리볼 수 있습니다 (실서비스에서는 `DemoStatusSwitcher` 제거).
+Firestore `users/{uid}` 기본 구조는 다음과 같습니다.
+
+```ts
+{
+  uid: string;
+  email: string;
+  name: string;
+  phone: string;
+  building: string;
+  unit: string;
+  apartmentId: "pradium";
+  role: "resident" | "admin" | "partner";
+  approvalStatus: "pending" | "approved" | "rejected" | "suspended";
+  createdAt: serverTimestamp;
+  approvedAt: null;
+  approvedBy: null;
+}
+```
 
 ## 개인정보 보호 원칙
 

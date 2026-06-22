@@ -10,30 +10,31 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import {
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  setPersistence,
   browserLocalPersistence,
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  setPersistence,
+  signInWithEmailAndPassword,
+  signOut,
   type User as FirebaseUser,
 } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
-import { auth, db } from "./firebase";
-import type { MemberStatus, User } from "./types";
-import { ACCESS_COOKIE, getUserAccessLevel } from "./access";
+import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
+import { getFirebaseAuth, getFirebaseDb } from "./firebase";
+import type { ApprovalStatus, MemberStatus, UserProfile, UserRole } from "./types";
+import { ACCESS_COOKIE, type AccessLevel } from "./access";
 
 /**
  * Firebase 기반 인증 컨텍스트.
- * - 이메일/비밀번호 회원가입·로그인
- * - 자동 로그인(브라우저 로컬 퍼시스턴스 + onAuthStateChanged)
- * - 입주민 프로필(Firestore users/{uid})과 admin 커스텀 클레임으로 권한 산정
- * - 산정된 권한을 danji-access 쿠키로 동기화해 서버 컴포넌트의 정보 정제(SSR)를 유지
+ * - Firebase Auth: 이메일/비밀번호 회원가입·로그인
+ * - Firestore users/{uid}: 입주민 프로필과 관리자 승인 상태
+ * - danji-access 쿠키: 서버 컴포넌트에서 mock 혜택/공동구매 데이터를 권한별 정제
  */
 
 interface AuthState {
-  user: User | null;
+  user: FirebaseUser | null;
+  profile: UserProfile | null;
   status: MemberStatus;
+  accessLevel: AccessLevel;
   isAdmin: boolean;
 }
 
@@ -41,64 +42,123 @@ export interface SignupInput {
   email: string;
   password: string;
   name: string;
-  dong: string;
-  ho: string;
+  building: string;
+  unit: string;
   phone: string;
 }
 
 interface AuthContextValue extends AuthState {
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (input: SignupInput) => Promise<void>;
+  login: (email: string, password: string) => Promise<AuthState>;
+  signup: (input: SignupInput) => Promise<AuthState>;
   logout: () => Promise<void>;
-  /** 개발/시연 전용: 인증 상태를 로컬에서만 강제 전환 (Firebase 미반영) */
+  /** 과거 데모 컨트롤 호환용. Firebase 권한에는 영향을 주지 않는다. */
   setDemoStatus: (status: MemberStatus) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const guestState: AuthState = { user: null, status: "guest", isAdmin: false };
+const guestState: AuthState = {
+  user: null,
+  profile: null,
+  status: "guest",
+  accessLevel: "guest",
+  isAdmin: false,
+};
 
-function writeAccessCookie(status: MemberStatus) {
-  const level = getUserAccessLevel({ status } as User);
+const DEFAULT_ADMIN_EMAILS = ["djmonnar4@gmail.com"];
+
+const ADMIN_EMAILS = [
+  ...DEFAULT_ADMIN_EMAILS,
+  ...(process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? "").split(","),
+]
+  .map((email) => email.trim().toLowerCase())
+  .filter(Boolean);
+
+function isConfiguredAdminEmail(email: string | null | undefined): boolean {
+  return Boolean(email && ADMIN_EMAILS.includes(email.toLowerCase()));
+}
+
+function writeAccessCookie(level: AccessLevel) {
   document.cookie = `${ACCESS_COOKIE}=${level}; path=/; max-age=2592000; samesite=lax`;
 }
 
-/** Firebase 사용자 + Firestore 프로필 → 앱 User 모델/상태 산정 */
-async function resolveUser(fbUser: FirebaseUser): Promise<AuthState> {
-  const tokenResult = await fbUser.getIdTokenResult();
-  const isAdmin = tokenResult.claims.admin === true;
+function asApprovalStatus(value: unknown): ApprovalStatus {
+  if (
+    value === "approved" ||
+    value === "rejected" ||
+    value === "suspended" ||
+    value === "pending"
+  ) {
+    return value;
+  }
+  return "pending";
+}
 
-  let profile: Record<string, unknown> | null = null;
+function asRole(value: unknown): UserRole {
+  if (value === "admin" || value === "partner" || value === "resident") {
+    return value;
+  }
+  return "resident";
+}
+
+function normalizeProfile(
+  uid: string,
+  email: string,
+  data: Record<string, unknown>,
+): UserProfile {
+  return {
+    uid,
+    email: (data.email as string | undefined) ?? email,
+    name: (data.name as string | undefined) ?? email,
+    phone: (data.phone as string | undefined) ?? "",
+    building:
+      (data.building as string | undefined) ??
+      (data.dong as string | undefined) ??
+      "",
+    unit:
+      (data.unit as string | undefined) ??
+      (data.ho as string | undefined) ??
+      "",
+    apartmentId: "pradium",
+    role: asRole(data.role),
+    approvalStatus: asApprovalStatus(data.approvalStatus ?? data.status),
+    createdAt: data.createdAt ?? data.appliedAt ?? null,
+    approvedAt: data.approvedAt ?? null,
+    approvedBy: (data.approvedBy as string | null | undefined) ?? null,
+  };
+}
+
+async function resolveAuthState(fbUser: FirebaseUser): Promise<AuthState> {
+  const email = fbUser.email ?? "";
+  const tokenResult = await fbUser.getIdTokenResult();
+  const hasAdminClaim = tokenResult.claims.admin === true;
+
+  let profile: UserProfile | null = null;
   try {
+    const db = getFirebaseDb();
     const snap = await getDoc(doc(db, "users", fbUser.uid));
-    profile = snap.exists() ? (snap.data() as Record<string, unknown>) : null;
+    if (snap.exists()) {
+      profile = normalizeProfile(fbUser.uid, email, snap.data());
+    }
   } catch {
     profile = null;
   }
 
-  const profileStatus = profile?.status as MemberStatus | undefined;
+  const isAdmin =
+    hasAdminClaim ||
+    profile?.role === "admin" ||
+    isConfiguredAdminEmail(fbUser.email);
+  const accessLevel: AccessLevel = isAdmin
+    ? "admin"
+    : profile?.approvalStatus === "approved"
+      ? "approved"
+      : "pending";
   const status: MemberStatus = isAdmin
     ? "approved"
-    : profileStatus ?? "pending";
+    : profile?.approvalStatus ?? "pending";
 
-  const user: User = {
-    id: fbUser.uid,
-    apartmentId: (profile?.apartmentId as string) ?? "apt-pradium",
-    name: (profile?.name as string) ?? (isAdmin ? "관리자" : fbUser.email ?? "입주민"),
-    dong: (profile?.dong as string) ?? "",
-    ho: (profile?.ho as string) ?? "",
-    phone: (profile?.phone as string) ?? "",
-    status,
-    appliedAt: (profile?.appliedAt as string) ?? "",
-    approvedAt: profile?.approvedAt as string | undefined,
-    lastLoginAt: fbUser.metadata.lastSignInTime
-      ? new Date(fbUser.metadata.lastSignInTime).toISOString().slice(0, 10)
-      : undefined,
-    email: fbUser.email ?? undefined,
-  };
-
-  return { user, status, isAdmin };
+  return { user: fbUser, profile, status, accessLevel, isAdmin };
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -106,11 +166,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AuthState>(guestState);
   const [loading, setLoading] = useState(true);
 
-  // 자동 로그인: 퍼시스턴스 설정 후 인증 상태 구독
   useEffect(() => {
     let active = true;
-    setPersistence(auth, browserLocalPersistence).catch(() => {});
-    const unsub = onAuthStateChanged(auth, async (fbUser) => {
+
+    let firebaseAuth: ReturnType<typeof getFirebaseAuth>;
+    try {
+      firebaseAuth = getFirebaseAuth();
+    } catch {
+      setState(guestState);
+      writeAccessCookie("guest");
+      setLoading(false);
+      return () => {
+        active = false;
+      };
+    }
+
+    setPersistence(firebaseAuth, browserLocalPersistence).catch(() => {});
+
+    const unsub = onAuthStateChanged(firebaseAuth, async (fbUser) => {
       if (!fbUser) {
         if (!active) return;
         setState(guestState);
@@ -119,84 +192,80 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         router.refresh();
         return;
       }
-      const next = await resolveUser(fbUser);
+
+      const next = await resolveAuthState(fbUser);
       if (!active) return;
       setState(next);
-      writeAccessCookie(next.status);
+      writeAccessCookie(next.accessLevel);
       setLoading(false);
       router.refresh();
     });
+
     return () => {
       active = false;
       unsub();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const login = useCallback(async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
-    // 이후 onAuthStateChanged가 상태/쿠키 동기화
-  }, []);
-
-  const signup = useCallback(async (input: SignupInput) => {
-    const cred = await createUserWithEmailAndPassword(
-      auth,
-      input.email,
-      input.password,
-    );
-    const today = new Date().toISOString().slice(0, 10);
-    await setDoc(doc(db, "users", cred.user.uid), {
-      uid: cred.user.uid,
-      email: input.email,
-      name: input.name,
-      dong: input.dong,
-      ho: input.ho,
-      phone: input.phone,
-      status: "pending",
-      role: "resident",
-      apartmentId: "apt-pradium",
-      appliedAt: today,
-      createdAt: today,
-    });
-    // 프로필 작성 후 상태 재산정
-    const next = await resolveUser(cred.user);
-    setState(next);
-    writeAccessCookie(next.status);
-    router.refresh();
   }, [router]);
 
+  const login = useCallback(
+    async (email: string, password: string) => {
+      const cred = await signInWithEmailAndPassword(
+        getFirebaseAuth(),
+        email.trim(),
+        password,
+      );
+      const next = await resolveAuthState(cred.user);
+      setState(next);
+      writeAccessCookie(next.accessLevel);
+      router.refresh();
+      return next;
+    },
+    [router],
+  );
+
+  const signup = useCallback(
+    async (input: SignupInput) => {
+      const email = input.email.trim();
+      const cred = await createUserWithEmailAndPassword(
+        getFirebaseAuth(),
+        email,
+        input.password,
+      );
+
+      await setDoc(doc(getFirebaseDb(), "users", cred.user.uid), {
+        uid: cred.user.uid,
+        email,
+        name: input.name.trim(),
+        phone: input.phone.trim(),
+        building: input.building.trim(),
+        unit: input.unit.trim(),
+        apartmentId: "pradium",
+        role: "resident",
+        approvalStatus: "pending",
+        createdAt: serverTimestamp(),
+        approvedAt: null,
+        approvedBy: null,
+      });
+
+      const next = await resolveAuthState(cred.user);
+      setState(next);
+      writeAccessCookie(next.accessLevel);
+      router.refresh();
+      return next;
+    },
+    [router],
+  );
+
   const logout = useCallback(async () => {
-    await signOut(auth);
+    await signOut(getFirebaseAuth());
     setState(guestState);
     writeAccessCookie("guest");
     router.refresh();
   }, [router]);
 
-  const setDemoStatus = useCallback(
-    (status: MemberStatus) => {
-      if (status === "guest") {
-        setState(guestState);
-        writeAccessCookie("guest");
-        router.refresh();
-        return;
-      }
-      const base: User =
-        state.user ?? {
-          id: "demo",
-          apartmentId: "apt-pradium",
-          name: "홍길동",
-          dong: "102",
-          ho: "1203",
-          phone: "010-1234-5678",
-          status,
-          appliedAt: "2026-05-01",
-        };
-      setState({ user: { ...base, status }, status, isAdmin: state.isAdmin });
-      writeAccessCookie(status);
-      router.refresh();
-    },
-    [router, state.user, state.isAdmin],
-  );
+  const setDemoStatus = useCallback((_status: MemberStatus) => {
+    // Firebase 전환 후 데모 상태는 실제 권한 판단에 영향을 주지 않는다.
+  }, []);
 
   const value = useMemo<AuthContextValue>(
     () => ({ ...state, loading, login, signup, logout, setDemoStatus }),

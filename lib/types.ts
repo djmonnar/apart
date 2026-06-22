@@ -16,10 +16,34 @@ export type MemberStatus =
   | "guest" // 비로그인
   | "pending" // 승인 대기
   | "approved" // 승인 완료
-  | "rejected"; // 반려
+  | "rejected" // 반려
+  | "suspended"; // 이용 정지
+
+export type UserRole = "resident" | "admin" | "partner";
+
+export type ApprovalStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "suspended";
+
+export interface UserProfile {
+  uid: string;
+  email: string;
+  name: string;
+  phone: string;
+  building: string;
+  unit: string;
+  apartmentId: "pradium";
+  role: UserRole;
+  approvalStatus: ApprovalStatus;
+  createdAt: unknown;
+  approvedAt: unknown | null;
+  approvedBy: string | null;
+}
 
 /** 쿠폰 사용 상태 */
-export type CouponStatus = "issued" | "used" | "expired";
+export type CouponStatus = "issued" | "used" | "expired" | "cancelled";
 
 export interface Apartment {
   id: string;
@@ -79,14 +103,19 @@ export interface Benefit {
 
 export interface Coupon {
   id: string;
-  code: string; // 1회용 쿠폰번호 (예: PRD-2026-ABCD-1234)
-  benefitId: string;
+  code: string;
+  apartmentId: "pradium";
   userId: string;
-  status: CouponStatus;
-  issuedAt: string;
-  usedAt?: string;
-  /** 사용 처리한 업체 */
+  benefitId: string;
+  benefitTitle: string;
   partnerId: string;
+  partnerName: string;
+  status: CouponStatus;
+  issuedAt: unknown;
+  expiresAt: unknown;
+  usedAt: unknown | null;
+  usedByPartnerId: string | null;
+  usedByPartnerName: string | null;
 }
 
 export interface Notice {
@@ -148,18 +177,59 @@ export type GroupBuyApplicationStatus =
   | "applied" // 신청완료
   | "checking" // 확인중
   | "confirmed" // 확정
-  | "canceled"; // 취소
+  | "cancelled"; // 취소
 
 export interface GroupBuyApplication {
   id: string;
   groupBuyId: string;
+  groupBuyTitle: string;
+  apartmentId: "pradium";
   userId: string;
-  apartmentId: string;
-  name: string;
+  userName: string;
   phone: string;
   building: string; // 동
   unit: string; // 호수
-  memo?: string;
+  memo: string;
   status: GroupBuyApplicationStatus;
-  createdAt: string;
+  createdAt: unknown;
+  updatedAt: unknown;
+}
+
+export type ApartmentInquiryRole =
+  | "residentRepresentative"
+  | "managementOffice"
+  | "resident"
+  | "etc";
+
+export type ApartmentInquiryStatus = "new" | "checking" | "done";
+
+export interface ApartmentInquiry {
+  id: string;
+  apartmentName: string;
+  region: string;
+  householdCount: string;
+  contactName: string;
+  role: ApartmentInquiryRole;
+  phone: string;
+  message: string;
+  internalMemo: string;
+  status: ApartmentInquiryStatus;
+  createdAt: unknown;
+  updatedAt: unknown;
+}
+
+export type PartnerInquiryStatus = "new" | "checking" | "done";
+
+export interface PartnerInquiry {
+  id: string;
+  businessName: string;
+  category: string;
+  contactName: string;
+  phone: string;
+  region: string;
+  message: string;
+  internalMemo: string;
+  status: PartnerInquiryStatus;
+  createdAt: unknown;
+  updatedAt: unknown;
 }

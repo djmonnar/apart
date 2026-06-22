@@ -1,31 +1,63 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getApp, getApps, initializeApp, type FirebaseApp } from "firebase/app";
+import { getAuth, type Auth } from "firebase/auth";
+import { getFirestore, type Firestore } from "firebase/firestore";
 
 /**
  * Firebase 클라이언트 초기화.
- * 아래 값은 Firebase 웹 앱의 "공개(publishable) 설정"으로, 클라이언트에 노출되어도
- * 안전한 식별자입니다. 실제 데이터 보호는 Firestore 보안 규칙으로 합니다.
- * (env로 덮어쓰고 싶으면 NEXT_PUBLIC_FIREBASE_* 사용)
+ * Firebase 웹 앱 설정은 .env.local의 NEXT_PUBLIC_FIREBASE_* 값으로만 주입한다.
+ * 실제 데이터 보호는 Firestore 보안 규칙으로 한다.
  */
-const firebaseConfig = {
-  apiKey:
-    process.env.NEXT_PUBLIC_FIREBASE_API_KEY ??
-    "AIzaSyB6BZVN4C9RTH_F_YHBUHBLrn1W_AdNhZc",
-  authDomain:
-    process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ??
-    "city-5725d.firebaseapp.com",
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? "city-5725d",
-  storageBucket:
-    process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ??
-    "city-5725d.firebasestorage.app",
-  messagingSenderId:
-    process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? "1032897296540",
-  appId:
-    process.env.NEXT_PUBLIC_FIREBASE_APP_ID ??
-    "1:1032897296540:web:38f51ba5fd32297abe5559",
-};
 
-export const firebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
-export const auth = getAuth(firebaseApp);
-export const db = getFirestore(firebaseApp);
+let firebaseApp: FirebaseApp | null = null;
+let firebaseAuth: Auth | null = null;
+let firestoreDb: Firestore | null = null;
+
+const requiredEnvKeys = [
+  "NEXT_PUBLIC_FIREBASE_API_KEY",
+  "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",
+  "NEXT_PUBLIC_FIREBASE_PROJECT_ID",
+  "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET",
+  "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID",
+  "NEXT_PUBLIC_FIREBASE_APP_ID",
+] as const;
+
+function firebaseConfigError() {
+  return Object.assign(
+    new Error("Firebase 환경변수가 설정되지 않았습니다."),
+    { code: "firebase/not-configured" },
+  );
+}
+
+function getFirebaseConfig() {
+  const missing = requiredEnvKeys.filter((key) => !process.env[key]);
+  if (missing.length > 0) {
+    throw firebaseConfigError();
+  }
+
+  return {
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
+  };
+}
+
+export function getFirebaseApp() {
+  if (firebaseApp) return firebaseApp;
+  firebaseApp = getApps().length ? getApp() : initializeApp(getFirebaseConfig());
+  return firebaseApp;
+}
+
+export function getFirebaseAuth() {
+  if (firebaseAuth) return firebaseAuth;
+  firebaseAuth = getAuth(getFirebaseApp());
+  return firebaseAuth;
+}
+
+export function getFirebaseDb() {
+  if (firestoreDb) return firestoreDb;
+  firestoreDb = getFirestore(getFirebaseApp());
+  return firestoreDb;
+}
