@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FlaskConical, X } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import type { MemberStatus } from "@/lib/types";
@@ -13,11 +13,21 @@ const OPTIONS: { value: MemberStatus; label: string }[] = [
 
 /**
  * 데모 전용: 입주민 인증 상태를 즉시 전환해 화면을 미리 볼 수 있게 하는 플로팅 컨트롤.
- * 실제 서비스에서는 제거한다.
+ * 시연(production) 화면에서는 숨김. 단, URL에 ?demo=true 가 있으면 표시.
  */
 export function DemoStatusSwitcher() {
   const { status, setDemoStatus } = useAuth();
   const [open, setOpen] = useState(false);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const isDev = process.env.NODE_ENV !== "production";
+    const demoParam =
+      new URLSearchParams(window.location.search).get("demo") === "true";
+    setVisible(isDev || demoParam);
+  }, []);
+
+  if (!visible) return null;
 
   if (!open) {
     return (

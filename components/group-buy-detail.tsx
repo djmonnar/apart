@@ -49,6 +49,7 @@ export function GroupBuyDetail({
         <div className="relative aspect-[16/9] overflow-hidden rounded-3xl shadow-card">
           <SafeImage
             src={view.image}
+            fallbackSrc={view.imageFallback}
             alt={view.title}
             sizes="(max-width: 1024px) 100vw, 60vw"
             priority

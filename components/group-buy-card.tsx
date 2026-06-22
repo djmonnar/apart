@@ -31,7 +31,11 @@ export function GroupBuyCard({
     return (
       <article className="card-base group flex flex-col overflow-hidden">
         <div className="relative aspect-[16/10] overflow-hidden">
-          <SafeImage src={view.image} alt={view.title} />
+          <SafeImage
+            src={view.image}
+            fallbackSrc={view.imageFallback}
+            alt={view.title}
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-brand-900/70 via-brand-900/15 to-transparent" />
           <span className="badge absolute left-3 top-3 bg-white/90 text-brand-700 backdrop-blur-sm">
             {view.category}
@@ -94,6 +98,7 @@ export function GroupBuyCard({
       >
         <SafeImage
           src={view.image}
+          fallbackSrc={view.imageFallback}
           alt={view.title}
           className="transition-transform duration-500 group-hover:scale-105"
         />

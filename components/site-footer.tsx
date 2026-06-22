@@ -1,10 +1,8 @@
 import Link from "next/link";
-import { Phone, Clock, Handshake } from "lucide-react";
-import { currentApartment } from "@/data/apartments";
+import { Mail, Clock, Handshake } from "lucide-react";
 import { BrandMark } from "./brand-mark";
 
 export function SiteFooter() {
-  const apt = currentApartment;
   return (
     <footer className="mt-20 border-t border-brand-800/40 bg-brand-900 text-cream-200">
       <div className="container-pad grid gap-10 py-12 md:grid-cols-2 lg:grid-cols-4">
@@ -19,16 +17,16 @@ export function SiteFooter() {
 
         <div>
           <h3 className="text-sm font-semibold text-cream-100">고객센터</h3>
-          <a
-            href={`tel:${apt.customerCenter}`}
-            className="mt-3 flex items-center gap-2 text-lg font-bold text-cream-50"
-          >
-            <Phone className="h-4 w-4 text-gold" aria-hidden />
-            {apt.customerCenter}
-          </a>
+          <p className="mt-3 flex items-center gap-2 text-base font-bold text-cream-50">
+            <Mail className="h-4 w-4 text-gold" aria-hidden />
+            제휴 및 입주민 문의
+          </p>
+          <p className="mt-2 text-sm text-cream-300/80">
+            연락처: <span className="text-cream-200">준비중</span>
+          </p>
           <p className="mt-2 flex items-start gap-2 text-sm text-cream-300/80">
             <Clock className="mt-0.5 h-4 w-4 shrink-0 text-gold" aria-hidden />
-            {apt.operatingHours}
+            운영시간: 평일 09:00 - 18:00
           </p>
         </div>
 
@@ -76,12 +74,24 @@ export function SiteFooter() {
       </div>
 
       <div className="border-t border-brand-800/50">
-        <div className="container-pad flex flex-col gap-1 py-5 text-xs text-cream-300/60 sm:flex-row sm:items-center sm:justify-between">
-          <p>
-            {apt.name} 입주자대표회의 · {apt.address} · 사업자등록번호
-            000-00-00000
-          </p>
-          <p>© 2026 JINJU SKY CITY PRADIUM. All rights reserved.</p>
+        <div className="container-pad flex flex-col gap-3 py-5 text-xs text-cream-300/60 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-1">
+            <p>운영: 단지라운지 · 대상 단지: 진주역 스카이시티프라디움 입주민 전용</p>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <Link href="/partner" className="hover:text-cream-100">
+                제휴문의
+              </Link>
+              <span aria-hidden>·</span>
+              <Link href="/terms" className="hover:text-cream-100">
+                이용약관
+              </Link>
+              <span aria-hidden>·</span>
+              <Link href="/privacy" className="hover:text-cream-100">
+                개인정보처리방침
+              </Link>
+            </div>
+          </div>
+          <p>© 2026 진주역 스카이시티프라디움 입주민 복지몰</p>
         </div>
       </div>
     </footer>

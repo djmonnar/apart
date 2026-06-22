@@ -140,6 +140,7 @@ export interface PublicGroupBuyView {
   title: string;
   category: string;
   image: string;
+  imageFallback?: string;
   summary: string;
   status: GroupBuyStatus;
   isFeatured?: boolean;
@@ -163,6 +164,7 @@ export function sanitizeGroupBuyByLevel(
     title: gb.title,
     category: gb.category,
     image: gb.image,
+    imageFallback: gb.imageFallback,
     summary: gb.summary,
     status: gb.status,
     isFeatured: gb.isFeatured,

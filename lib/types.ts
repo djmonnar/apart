@@ -119,7 +119,10 @@ export interface GroupBuy {
   title: string;
   /** 표시용 카테고리 라벨 (예: 생활/편의, 반찬/식품) */
   category: string;
+  /** 대표 이미지(예정 파일). 없으면 imageFallback → 기본 fallback UI 순으로 표시 */
   image: string;
+  /** image 로드 실패 시 사용할 기존 이미지 */
+  imageFallback?: string;
   summary: string;
   description: string;
   /** 가격은 "90,000원" 또는 "방문견적" 등 자유 문자열 */

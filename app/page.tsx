@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { Gift, ChevronRight, Sparkles } from "lucide-react";
+import { Gift, ChevronRight, Sparkles, Users } from "lucide-react";
 import { SiteShell } from "@/components/site-shell";
 import { Hero } from "@/components/hero";
 import { CategoryNav } from "@/components/category-nav";
 import { BenefitCard } from "@/components/benefit-card";
+import { GroupBuyCard } from "@/components/group-buy-card";
 import { AuthStatusCard } from "@/components/auth-status-card";
 import { StepsSection } from "@/components/steps-section";
 import { NoticeSection } from "@/components/notice-section";
@@ -11,7 +12,11 @@ import { FaqSection } from "@/components/faq-section";
 import { SafeImage } from "@/components/safe-image";
 import { getFeaturedBenefits } from "@/lib/queries";
 import { getServerAccessLevel } from "@/lib/access-server";
-import { sanitizeBenefitByLevel } from "@/lib/access";
+import { sanitizeBenefitByLevel, sanitizeGroupBuyByLevel } from "@/lib/access";
+import { getGroupBuy, isClosingSoon } from "@/data/group-buys";
+
+// 메인에 미리보기로 노출할 공동구매 (모집중 2 + 목표달성 1)
+const PREVIEW_GROUP_BUY_IDS = ["gb-aircon", "gb-banchan", "gb-curtain"];
 
 // 권한(쿠키)에 따라 서버에서 혜택을 정제하므로 동적 렌더
 export const dynamic = "force-dynamic";
@@ -19,6 +24,14 @@ export const dynamic = "force-dynamic";
 export default function HomePage() {
   const level = getServerAccessLevel();
   const featured = getFeaturedBenefits();
+
+  // 공동구매 미리보기 — 권한별 서버 정제
+  const groupBuyPreview = PREVIEW_GROUP_BUY_IDS.map((id) => getGroupBuy(id))
+    .filter((gb): gb is NonNullable<typeof gb> => Boolean(gb))
+    .map((gb) => ({
+      view: sanitizeGroupBuyByLevel(gb, level),
+      closingSoon: isClosingSoon(gb),
+    }));
 
   return (
     <SiteShell>
@@ -64,6 +77,41 @@ export default function HomePage() {
           <aside className="lg:sticky lg:top-24 lg:self-start">
             <AuthStatusCard />
           </aside>
+        </div>
+      </section>
+
+      {/* 공동구매 미리보기 */}
+      <section className="container-pad py-10">
+        <div className="rounded-3xl border border-line bg-white p-7 shadow-card sm:p-9">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="flex items-center gap-2 text-2xl font-bold text-ink">
+                <Users className="h-6 w-6 text-brand-500" aria-hidden />
+                입주민 공동구매
+              </h2>
+              <p className="mt-2 text-sm text-ink-soft">
+                우리 단지 주민이 함께 신청하면 더 좋은 조건으로 이용할 수 있어요.
+              </p>
+            </div>
+            <Link
+              href="/group-buy"
+              className="btn-secondary shrink-0 self-start sm:self-auto"
+            >
+              공동구매 전체보기
+              <ChevronRight className="h-4 w-4" aria-hidden />
+            </Link>
+          </div>
+
+          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {groupBuyPreview.map(({ view, closingSoon }) => (
+              <GroupBuyCard
+                key={view.id}
+                view={view}
+                level={level}
+                closingSoon={closingSoon}
+              />
+            ))}
+          </div>
         </div>
       </section>
 
