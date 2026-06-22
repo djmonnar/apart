@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Users, Store, Ticket, TrendingUp } from "lucide-react";
 import { AdminShell } from "@/components/admin-shell";
+import { AdminGuard } from "@/components/admin-guard";
 import { PendingApprovals } from "@/components/pending-approvals";
 import { partners } from "@/data/partners";
 import { CATEGORY_LABEL } from "@/lib/constants";
@@ -16,7 +17,8 @@ const STATS = [
 
 export default function AdminPage() {
   return (
-    <AdminShell>
+    <AdminGuard>
+      <AdminShell>
       {/* 통계 카드 */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {STATS.map((s) => {
@@ -78,6 +80,7 @@ export default function AdminPage() {
         ※ 본 화면은 관리자 대시보드의 기본 골격입니다. 아파트·입주민·제휴업체·혜택·쿠폰
         사용내역 관리와 리포트 기능이 이후 확장됩니다.
       </p>
-    </AdminShell>
+      </AdminShell>
+    </AdminGuard>
   );
 }

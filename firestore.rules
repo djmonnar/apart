@@ -1,0 +1,47 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.admin == true;
+    }
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // 입주민 프로필
+    // - 본인 또는 관리자만 열람
+    // - 본인은 'pending' 상태로만 생성 가능 (본인 uid 일치)
+    // - 본인은 status를 변경할 수 없고, 승인/반려는 관리자만 가능
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isOwner(uid)
+                    && request.resource.data.uid == uid
+                    && request.resource.data.status == 'pending';
+      allow update: if isAdmin()
+                    || (isOwner(uid)
+                        && request.resource.data.status == resource.data.status);
+      allow delete: if isAdmin();
+    }
+
+    // 공동구매 신청
+    // - 본인 신청만 생성, 본인/관리자만 열람
+    // - 상태 변경/삭제는 관리자만 (업체에는 노출되지 않음)
+    match /groupBuyApplications/{appId} {
+      allow read: if isAdmin()
+                  || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn()
+                    && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    // 그 외 모든 문서는 기본 차단
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

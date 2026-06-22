@@ -41,6 +41,7 @@ export interface User {
   appliedAt: string; // 가입 신청일 (ISO)
   approvedAt?: string;
   lastLoginAt?: string;
+  email?: string;
 }
 
 export interface Partner {

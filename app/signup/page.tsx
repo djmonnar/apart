@@ -3,25 +3,42 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { UserPlus, ShieldCheck, Check } from "lucide-react";
+import { UserPlus, ShieldCheck, Check, AlertCircle } from "lucide-react";
 import { SiteShell } from "@/components/site-shell";
 import { SafeImage } from "@/components/safe-image";
 import { useAuth } from "@/lib/auth-context";
+import { firebaseAuthErrorMessage } from "@/lib/auth-errors";
 
 export default function SignupPage() {
   const router = useRouter();
   const { signup } = useAuth();
-  const [form, setForm] = useState({ dong: "", ho: "", name: "", phone: "" });
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+    name: "",
+    dong: "",
+    ho: "",
+    phone: "",
+  });
   const [agree, setAgree] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const update = (key: keyof typeof form) => (v: string) =>
     setForm((f) => ({ ...f, [key]: v }));
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!agree) return;
-    signup(form);
-    router.push("/mypage");
+    setError(null);
+    setSubmitting(true);
+    try {
+      await signup(form);
+      router.push("/mypage");
+    } catch (err) {
+      setError(firebaseAuthErrorMessage(err));
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -40,8 +57,8 @@ export default function SignupPage() {
               단지 전용 혜택을 시작하세요
             </h1>
             <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-              동·호수·이름·휴대폰번호를 입력해 가입을 신청하시면, 관리자가
-              입주민 명부와 대조하여 승인합니다.
+              이메일과 비밀번호로 가입하고 동·호수·이름·휴대폰번호를 입력하시면,
+              관리자가 입주민 명부와 대조하여 승인합니다.
             </p>
 
             <div className="relative mt-6 aspect-[16/10] overflow-hidden rounded-3xl shadow-card">
@@ -55,7 +72,7 @@ export default function SignupPage() {
             <ul className="mt-6 space-y-2.5">
               {[
                 "가입 신청 후 관리자 승인이 완료되면 모든 혜택 이용 가능",
-                "승인 전에도 혜택 열람은 자유롭게 가능",
+                "승인 전에도 혜택·공동구매 기본 안내는 열람 가능",
                 "제휴 매장에는 개인정보가 제공되지 않습니다",
               ].map((t) => (
                 <li key={t} className="flex items-start gap-2 text-sm text-ink-soft">
@@ -70,7 +87,27 @@ export default function SignupPage() {
           <div className="order-1 lg:order-2">
             <form onSubmit={submit} className="card-base p-7" aria-label="회원가입 양식">
               <h2 className="text-lg font-bold text-ink">입주민 가입 신청</h2>
-              <div className="mt-5 grid grid-cols-2 gap-4">
+
+              <div className="mt-5 space-y-4">
+                <Field
+                  label="이메일"
+                  value={form.email}
+                  onChange={update("email")}
+                  placeholder="example@email.com"
+                  type="email"
+                  autoComplete="email"
+                />
+                <Field
+                  label="비밀번호 (6자 이상)"
+                  value={form.password}
+                  onChange={update("password")}
+                  placeholder="비밀번호"
+                  type="password"
+                  autoComplete="new-password"
+                />
+              </div>
+
+              <div className="mt-4 grid grid-cols-2 gap-4">
                 <Field label="동" value={form.dong} onChange={update("dong")} placeholder="101" />
                 <Field label="호수" value={form.ho} onChange={update("ho")} placeholder="1203" />
               </div>
@@ -105,13 +142,16 @@ export default function SignupPage() {
                 </span>
               </label>
 
-              <button
-                type="submit"
-                disabled={!agree}
-                className="btn-primary mt-5 w-full"
-              >
+              {error && (
+                <p className="mt-4 flex items-start gap-1.5 rounded-xl bg-rose-50 px-3.5 py-2.5 text-xs leading-relaxed text-rose-600">
+                  <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+                  {error}
+                </p>
+              )}
+
+              <button type="submit" disabled={!agree || submitting} className="btn-primary mt-5 w-full">
                 <UserPlus className="h-4 w-4" aria-hidden />
-                가입 신청하기
+                {submitting ? "가입 신청 중..." : "가입 신청하기"}
               </button>
 
               <p className="mt-4 text-center text-sm text-ink-soft">

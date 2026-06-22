@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Users, ClipboardList, Target, Timer, Plus } from "lucide-react";
 import { AdminShell } from "@/components/admin-shell";
+import { AdminGuard } from "@/components/admin-guard";
 import { GroupBuyApplicants } from "@/components/group-buy-applicants";
 import { groupBuys, isClosingSoon } from "@/data/group-buys";
 import { groupBuyApplications } from "@/data/group-buy-applications";
@@ -41,7 +42,8 @@ export default function AdminGroupBuyPage() {
   ];
 
   return (
-    <AdminShell current="공동구매 관리">
+    <AdminGuard>
+      <AdminShell current="공동구매 관리">
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-ink">공동구매 관리</h2>
@@ -204,7 +206,8 @@ export default function AdminGroupBuyPage() {
       <div className="mt-6">
         <GroupBuyApplicants />
       </div>
-    </AdminShell>
+      </AdminShell>
+    </AdminGuard>
   );
 }
 
