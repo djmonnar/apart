@@ -11,16 +11,21 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { canIssueCoupon } from "@/lib/access";
 import { generateCouponCode } from "@/data/coupons";
 import { QrPreview } from "./qr-preview";
 import type { Benefit } from "@/lib/types";
 
 export function CouponPanel({ benefit }: { benefit: Benefit }) {
-  const { status } = useAuth();
+  const { status, user } = useAuth();
   const [code, setCode] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const issue = () => setCode(generateCouponCode());
+  const issue = () => {
+    // 승인 완료 입주민만 쿠폰 발급 가능
+    if (!canIssueCoupon(user)) return;
+    setCode(generateCouponCode());
+  };
   const copy = async () => {
     if (!code) return;
     try {

@@ -10,6 +10,7 @@ import { BrandMark } from "./brand-mark";
 const NAV = [
   { label: "복지몰 홈", href: "/" },
   { label: "혜택 안내", href: "/benefits" },
+  { label: "공동구매", href: "/group-buy" },
   { label: "이용 가이드", href: "/#guide" },
   { label: "공지사항", href: "/#notice" },
   { label: "자주 묻는 질문", href: "/#faq" },

@@ -10,8 +10,14 @@ import { NoticeSection } from "@/components/notice-section";
 import { FaqSection } from "@/components/faq-section";
 import { SafeImage } from "@/components/safe-image";
 import { getFeaturedBenefits } from "@/lib/queries";
+import { getServerAccessLevel } from "@/lib/access-server";
+import { sanitizeBenefitByLevel } from "@/lib/access";
+
+// 권한(쿠키)에 따라 서버에서 혜택을 정제하므로 동적 렌더
+export const dynamic = "force-dynamic";
 
 export default function HomePage() {
+  const level = getServerAccessLevel();
   const featured = getFeaturedBenefits();
 
   return (
@@ -39,8 +45,9 @@ export default function HomePage() {
               {featured.map(({ benefit, partner }) => (
                 <BenefitCard
                   key={benefit.id}
-                  benefit={benefit}
+                  view={sanitizeBenefitByLevel(benefit, level)}
                   partner={partner}
+                  level={level}
                 />
               ))}
             </div>

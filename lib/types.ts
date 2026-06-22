@@ -97,3 +97,65 @@ export interface Notice {
   isNew?: boolean;
   body?: string;
 }
+
+/** 공동구매 진행 상태 */
+export type GroupBuyStatus =
+  | "survey" // 수요조사중
+  | "recruiting" // 모집중
+  | "achieved" // 목표달성
+  | "closed" // 마감
+  | "done" // 진행완료
+  | "canceled"; // 취소
+
+/** 진행 일정 단계 */
+export interface GroupBuyScheduleStep {
+  label: string;
+  date?: string;
+}
+
+export interface GroupBuy {
+  id: string;
+  apartmentId: string;
+  title: string;
+  /** 표시용 카테고리 라벨 (예: 생활/편의, 반찬/식품) */
+  category: string;
+  image: string;
+  summary: string;
+  description: string;
+  /** 가격은 "90,000원" 또는 "방문견적" 등 자유 문자열 */
+  originalPrice: string;
+  groupPrice: string;
+  targetCount: number;
+  currentCount: number;
+  startDate: string;
+  endDate: string;
+  status: GroupBuyStatus;
+  partnerId?: string;
+  partnerName: string;
+  terms: string[];
+  schedule: GroupBuyScheduleStep[];
+  isFeatured?: boolean;
+  /** 관리자가 수동으로 잠근 경우 (접근 권한과 별개) */
+  isLocked?: boolean;
+}
+
+/** 공동구매 신청 상태 */
+export type GroupBuyApplicationStatus =
+  | "applied" // 신청완료
+  | "checking" // 확인중
+  | "confirmed" // 확정
+  | "canceled"; // 취소
+
+export interface GroupBuyApplication {
+  id: string;
+  groupBuyId: string;
+  userId: string;
+  apartmentId: string;
+  name: string;
+  phone: string;
+  building: string; // 동
+  unit: string; // 호수
+  memo?: string;
+  status: GroupBuyApplicationStatus;
+  createdAt: string;
+}

@@ -8,8 +8,10 @@ import {
   useMemo,
   useState,
 } from "react";
+import { useRouter } from "next/navigation";
 import type { MemberStatus, User } from "./types";
 import { users as mockUsers } from "@/data/users";
+import { ACCESS_COOKIE, getUserAccessLevel } from "./access";
 
 /**
  * 목업 인증 컨텍스트.
@@ -47,26 +49,43 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 const guestState: AuthState = { user: null, status: "guest" };
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const [state, setState] = useState<AuthState>(guestState);
 
-  // 새로고침 시 상태 복원
+  const writeCookie = useCallback((next: AuthState) => {
+    // 서버 컴포넌트가 권한을 읽어 혜택을 정제하도록 쿠키에 레벨 동기화
+    const level = getUserAccessLevel(next.user);
+    document.cookie = `${ACCESS_COOKIE}=${level}; path=/; max-age=2592000; samesite=lax`;
+  }, []);
+
+  // 새로고침 시 상태 복원 (+ 쿠키 동기화)
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) setState(JSON.parse(raw));
+      const restored: AuthState = raw ? JSON.parse(raw) : guestState;
+      setState(restored);
+      writeCookie(restored);
+      router.refresh();
     } catch {
       /* noop */
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const persist = useCallback((next: AuthState) => {
-    setState(next);
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    } catch {
-      /* noop */
-    }
-  }, []);
+  const persist = useCallback(
+    (next: AuthState) => {
+      setState(next);
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      } catch {
+        /* noop */
+      }
+      writeCookie(next);
+      // 서버 컴포넌트(혜택 정제)를 새 권한으로 다시 렌더
+      router.refresh();
+    },
+    [router, writeCookie],
+  );
 
   const login = useCallback(() => {
     const approved = mockUsers.find((u) => u.status === "approved") ?? null;

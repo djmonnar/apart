@@ -1,0 +1,71 @@
+import type { GroupBuyApplication } from "@/lib/types";
+
+/** 공동구매 신청 목업 — 관리자 신청자 목록 데모용 (개인정보는 관리자만 열람) */
+export const groupBuyApplications: GroupBuyApplication[] = [
+  {
+    id: "gba-0001",
+    groupBuyId: "gb-aircon",
+    userId: "usr-hong",
+    apartmentId: "apt-pradium",
+    name: "홍길동",
+    phone: "010-1234-5678",
+    building: "102",
+    unit: "1203",
+    memo: "스탠드형 1대 포함입니다.",
+    status: "confirmed",
+    createdAt: "2026-06-20",
+  },
+  {
+    id: "gba-0002",
+    groupBuyId: "gb-aircon",
+    userId: "usr-lee",
+    apartmentId: "apt-pradium",
+    name: "이서연",
+    phone: "010-2345-6789",
+    building: "104",
+    unit: "701",
+    status: "checking",
+    createdAt: "2026-06-21",
+  },
+  {
+    id: "gba-0003",
+    groupBuyId: "gb-banchan",
+    userId: "usr-park",
+    apartmentId: "apt-pradium",
+    name: "박지은",
+    phone: "010-3456-7890",
+    building: "103",
+    unit: "1402",
+    memo: "견과류 알러지 있어요.",
+    status: "applied",
+    createdAt: "2026-06-22",
+  },
+  {
+    id: "gba-0004",
+    groupBuyId: "gb-banchan",
+    userId: "usr-kim",
+    apartmentId: "apt-pradium",
+    name: "김서연",
+    phone: "010-4567-8901",
+    building: "105",
+    unit: "502",
+    status: "applied",
+    createdAt: "2026-06-22",
+  },
+  {
+    id: "gba-0005",
+    groupBuyId: "gb-carwash",
+    userId: "usr-choi",
+    apartmentId: "apt-pradium",
+    name: "최우진",
+    phone: "010-5678-9012",
+    building: "101",
+    unit: "1201",
+    memo: "SUV 차량입니다.",
+    status: "applied",
+    createdAt: "2026-06-22",
+  },
+];
+
+export const getApplicationsByGroupBuy = (groupBuyId: string) =>
+  groupBuyApplications.filter((a) => a.groupBuyId === groupBuyId);

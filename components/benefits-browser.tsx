@@ -4,31 +4,50 @@ import { useMemo, useState } from "react";
 import { Search, SearchX } from "lucide-react";
 import { CategoryNav } from "./category-nav";
 import { BenefitCard } from "./benefit-card";
-import { getBenefitsWithPartner, filterByCategory } from "@/lib/queries";
-import type { CategoryId } from "@/lib/types";
+import { type AccessLevel, type BenefitView, canViewByLevel } from "@/lib/access";
+import type { CategoryId, Partner } from "@/lib/types";
 
+export interface BrowserItem {
+  view: BenefitView;
+  partner: Partner;
+}
+
+/**
+ * 목록/검색 인터랙션 담당(클라이언트). 단, 데이터는 서버에서 권한별로
+ * 정제된 `items`를 받으므로, 미승인 사용자에게는 상세 혜택이 전달되지 않는다.
+ */
 export function BenefitsBrowser({
+  items,
+  level,
   initialCategory = "all",
 }: {
+  items: BrowserItem[];
+  level: AccessLevel;
   initialCategory?: CategoryId | "all";
 }) {
-  const all = useMemo(() => getBenefitsWithPartner(), []);
+  const canViewDetail = canViewByLevel(level);
   const [category, setCategory] = useState<CategoryId | "all">(initialCategory);
   const [query, setQuery] = useState("");
 
   const results = useMemo(() => {
-    let list = filterByCategory(all, category);
+    let list =
+      category === "all"
+        ? items
+        : items.filter((it) => it.partner.category === category);
+
     const q = query.trim();
     if (q) {
-      list = list.filter(
-        ({ partner, benefit }) =>
-          partner.name.includes(q) ||
-          benefit.title.includes(q) ||
-          benefit.summary.some((s) => s.includes(q)),
-      );
+      list = list.filter(({ partner, view }) => {
+        // 미승인 사용자는 업체명/소개만 검색 (할인 정보 비노출)
+        if (partner.name.includes(q) || partner.tagline.includes(q)) return true;
+        if (!canViewDetail || view.locked) return false;
+        return (
+          view.title.includes(q) || view.summary.some((s) => s.includes(q))
+        );
+      });
     }
     return list;
-  }, [all, category, query]);
+  }, [items, category, query, canViewDetail]);
 
   return (
     <div>
@@ -42,7 +61,11 @@ export function BenefitsBrowser({
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="업체명 또는 혜택을 검색하세요"
+            placeholder={
+              canViewDetail
+                ? "업체명 또는 혜택을 검색하세요"
+                : "업체명으로 검색하세요"
+            }
             className="w-full rounded-xl border border-line bg-white py-3 pl-11 pr-4 text-sm text-ink shadow-soft outline-none transition-colors placeholder:text-ink-faint focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
             aria-label="혜택 검색"
           />
@@ -60,8 +83,13 @@ export function BenefitsBrowser({
 
       {results.length > 0 ? (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {results.map(({ benefit, partner }) => (
-            <BenefitCard key={benefit.id} benefit={benefit} partner={partner} />
+          {results.map(({ view, partner }) => (
+            <BenefitCard
+              key={view.id}
+              view={view}
+              partner={partner}
+              level={level}
+            />
           ))}
         </div>
       ) : (

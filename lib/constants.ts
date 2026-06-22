@@ -55,3 +55,64 @@ export const MEMBER_STATUS_META: Record<
 
 export const SERVICE_NAME = "진주역 스카이시티프라디움 입주민 복지몰";
 export const INTERNAL_NAME = "단지라운지";
+
+import type {
+  GroupBuyStatus,
+  GroupBuyApplicationStatus,
+} from "./types";
+
+type Tone = "neutral" | "info" | "warning" | "success" | "danger";
+
+/** 공동구매 상태 표시 메타 */
+export const GROUP_BUY_STATUS_META: Record<
+  GroupBuyStatus,
+  { label: string; tone: Tone }
+> = {
+  survey: { label: "수요조사중", tone: "info" },
+  recruiting: { label: "모집중", tone: "success" },
+  achieved: { label: "목표달성", tone: "warning" },
+  closed: { label: "마감", tone: "neutral" },
+  done: { label: "진행완료", tone: "neutral" },
+  canceled: { label: "취소", tone: "danger" },
+};
+
+/** 공동구매 신청 상태 표시 메타 */
+export const GROUP_BUY_APPLICATION_META: Record<
+  GroupBuyApplicationStatus,
+  { label: string; tone: Tone }
+> = {
+  applied: { label: "신청완료", tone: "info" },
+  checking: { label: "확인중", tone: "warning" },
+  confirmed: { label: "확정", tone: "success" },
+  canceled: { label: "취소", tone: "danger" },
+};
+
+/** 톤 → Tailwind 클래스 (뱃지용) */
+export const TONE_CLASS: Record<Tone, string> = {
+  neutral: "bg-sand-200 text-brand-500",
+  info: "bg-sky-100 text-sky-700",
+  warning: "bg-amber-100 text-amber-700",
+  success: "bg-emerald-100 text-emerald-700",
+  danger: "bg-rose-100 text-rose-600",
+};
+
+/** 공동구매 목록 상태 탭 (마감임박은 파생 필터) */
+export type GroupBuyTab =
+  | "all"
+  | "survey"
+  | "recruiting"
+  | "achieved"
+  | "closing"
+  | "ended";
+
+export const GROUP_BUY_TABS: { id: GroupBuyTab; label: string }[] = [
+  { id: "all", label: "전체" },
+  { id: "survey", label: "수요조사중" },
+  { id: "recruiting", label: "모집중" },
+  { id: "achieved", label: "목표달성" },
+  { id: "closing", label: "마감임박" },
+  { id: "ended", label: "종료" },
+];
+
+/** 마감 임박 기준 (일) */
+export const CLOSING_SOON_DAYS = 4;
