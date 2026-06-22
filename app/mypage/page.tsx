@@ -69,7 +69,7 @@ export default function MyPage() {
       <PageHero
         eyebrow="MY PAGE"
         title={`${profile?.name ?? user?.email ?? "입주민"}님 환영합니다`}
-        description="입주민 인증 상태와 발급받은 쿠폰, 공동구매 신청 내역을 확인하실 수 있습니다."
+        description="입주민 인증 상태와 이번 달 혜택 이용 현황, 공동구매 신청 내역을 확인하실 수 있습니다."
       />
 
       <section className="container-pad py-10">

@@ -24,7 +24,7 @@ export default function PrivacyPage() {
           <div>
             <h2 className="text-base font-bold text-ink">2. 개인정보의 제3자 제공</h2>
             <p className="mt-2">
-              제휴 매장에는 쿠폰의 유효성과 혜택 적용 가능 여부만 전달되며,
+              제휴 매장에는 손님 휴대폰의 혜택명과 사용 처리 상태만 표시되며,
               입주민의 동·호수·연락처 등 개인정보는 일절 제공되지 않습니다.
             </p>
           </div>

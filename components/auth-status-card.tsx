@@ -37,7 +37,7 @@ export function AuthStatusCard() {
     pending: {
       icon: Clock3,
       title: "관리자 승인 대기 중입니다",
-      desc: "관리자가 입주민 정보를 확인하고 있습니다.\n승인 후 쿠폰 사용이 가능합니다.",
+      desc: "관리자가 입주민 정보를 확인하고 있습니다.\n승인 후 혜택 사용이 가능합니다.",
       cta: { label: "마이페이지 보기", href: "/mypage" },
     },
     approved: {
@@ -113,7 +113,7 @@ export function AuthStatusCard() {
       </dl>
 
       <p className="mt-4 text-xs text-ink-faint">
-        * 관리자 승인 후 쿠폰 사용이 가능합니다.
+        * 관리자 승인 후 혜택 사용이 가능합니다.
       </p>
     </div>
   );

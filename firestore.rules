@@ -232,6 +232,53 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    function validBenefitRedemptionCreate(redemptionId) {
+      return request.resource.data.keys().hasOnly([
+          'id',
+          'apartmentId',
+          'userId',
+          'benefitId',
+          'benefitTitle',
+          'partnerId',
+          'partnerName',
+          'periodKey',
+          'status',
+          'createdAt',
+          'usedAt',
+          'usedBy',
+          'monthlyLimit'
+        ])
+        && request.resource.data.id == redemptionId
+        && request.resource.data.apartmentId == 'pradium'
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.benefitId is string
+        && request.resource.data.benefitTitle is string
+        && request.resource.data.partnerId is string
+        && request.resource.data.partnerName is string
+        && request.resource.data.periodKey is string
+        && request.resource.data.status == 'ready'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.usedAt == null
+        && request.resource.data.usedBy == null
+        && request.resource.data.monthlyLimit is number
+        && request.resource.data.monthlyLimit >= 1;
+    }
+
+    match /benefitRedemptions/{redemptionId} {
+      allow read: if isAdmin()
+                  || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if (isAdmin() || isApprovedResident())
+                    && validBenefitRedemptionCreate(redemptionId);
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /benefitUsagePeriods/{usageId} {
+      allow read: if isAdmin()
+                  || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create, update, delete: if isAdmin();
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

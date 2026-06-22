@@ -8,13 +8,14 @@ export const benefits: Benefit[] = [
     title: "펌/염색 20% 할인 + 전 시술 10% 할인",
     summary: ["펌/염색 20% 할인", "모든 시술 10% 할인"],
     conditions: [
-      "입주민 인증 후 쿠폰 제시 시 적용",
+      "입주민 인증 후 혜택 사용 화면에서 사용 완료 처리 시 적용",
       "타 할인 및 이벤트와 중복 적용 불가",
       "예약 방문 권장",
     ],
     validFrom: "2026-05-01",
     validTo: "2026-06-30",
     usageLimit: "1인 1회",
+    monthlyLimitPerUser: 1,
     highlight: true,
   },
   {
@@ -24,12 +25,13 @@ export const benefits: Benefit[] = [
     title: "컷트 5,000원 할인 + 염색 10% 할인",
     summary: ["컷트 5,000원 할인", "염색 10% 할인"],
     conditions: [
-      "입주민 인증 후 쿠폰 제시 시 적용",
+      "입주민 인증 후 혜택 사용 화면에서 사용 완료 처리 시 적용",
       "현장 결제 시에만 적용",
     ],
     validFrom: "2026-05-01",
     validTo: "2026-06-30",
     usageLimit: "1인 1회",
+    monthlyLimitPerUser: 1,
     highlight: true,
   },
   {
@@ -45,6 +47,7 @@ export const benefits: Benefit[] = [
     validFrom: "2026-05-01",
     validTo: "2026-07-31",
     usageLimit: "1인 1회",
+    monthlyLimitPerUser: 1,
     highlight: true,
   },
   {
@@ -60,6 +63,7 @@ export const benefits: Benefit[] = [
     validFrom: "2026-05-01",
     validTo: "2026-06-30",
     usageLimit: "1인 1회",
+    monthlyLimitPerUser: 1,
     highlight: true,
   },
   {
@@ -75,6 +79,7 @@ export const benefits: Benefit[] = [
     validFrom: "2026-05-01",
     validTo: "2026-06-30",
     usageLimit: "1인 1회",
+    monthlyLimitPerUser: 1,
     highlight: true,
   },
   {
@@ -90,6 +95,7 @@ export const benefits: Benefit[] = [
     validFrom: "2026-05-01",
     validTo: "2026-07-31",
     usageLimit: "1인 1회",
+    monthlyLimitPerUser: 1,
     highlight: true,
   },
 ];

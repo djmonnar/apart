@@ -127,7 +127,7 @@ export function BenefitCard({
           className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-sand-100 px-4 py-2.5 text-sm font-semibold text-brand-700 transition-colors group-hover:bg-brand-600 group-hover:text-cream-50"
         >
           <Ticket className="h-4 w-4" aria-hidden />
-          쿠폰 받기
+          혜택 보기
         </Link>
       </div>
     </article>

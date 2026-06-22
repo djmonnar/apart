@@ -60,6 +60,7 @@ export const INTERNAL_NAME = "단지라운지";
 import type {
   ApartmentInquiryRole,
   ApartmentInquiryStatus,
+  BenefitRedemptionStatus,
   CouponStatus,
   GroupBuyStatus,
   GroupBuyApplicationStatus,
@@ -131,6 +132,15 @@ export const COUPON_STATUS_META: Record<
 };
 
 /** 톤 → Tailwind 클래스 (뱃지용) */
+export const BENEFIT_REDEMPTION_STATUS_META: Record<
+  BenefitRedemptionStatus,
+  { label: string; tone: Tone }
+> = {
+  ready: { label: "사용 처리 전", tone: "warning" },
+  used: { label: "사용 완료", tone: "success" },
+  cancelled: { label: "취소", tone: "neutral" },
+};
+
 export const TONE_CLASS: Record<Tone, string> = {
   neutral: "bg-sand-200 text-brand-500",
   info: "bg-sky-100 text-sky-700",

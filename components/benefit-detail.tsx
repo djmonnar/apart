@@ -106,7 +106,7 @@ export function BenefitDetail({
               </p>
               <ul className="mt-5 space-y-1.5 text-xs text-ink-faint">
                 <li>· 정확한 할인율 및 상세 혜택</li>
-                <li>· 쿠폰 발급 및 QR 인증</li>
+                <li>· 손님 폰에서 혜택 사용 확인</li>
                 <li>· 사용 조건 / 예약·문의</li>
               </ul>
             </div>
@@ -165,7 +165,7 @@ export function BenefitDetail({
           <>
             <CouponPanel benefit={view} partner={partner} />
             <p className="mt-3 px-1 text-center text-xs leading-relaxed text-ink-faint">
-              제휴 매장에는 쿠폰의 유효성만 전달되며,
+              제휴 매장에는 사용 완료 여부만 확인되며,
               <br />
               동·호수 등 개인정보는 제공되지 않습니다.
             </p>

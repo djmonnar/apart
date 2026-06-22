@@ -98,6 +98,7 @@ export interface Benefit {
   validTo: string;
   /** 1인 사용 제한 (예: 1회) */
   usageLimit: string;
+  monthlyLimitPerUser?: number;
   highlight?: boolean; // 메인 추천 노출
 }
 
@@ -116,6 +117,36 @@ export interface Coupon {
   usedAt: unknown | null;
   usedByPartnerId: string | null;
   usedByPartnerName: string | null;
+}
+
+export type BenefitRedemptionStatus = "ready" | "used" | "cancelled";
+
+export interface BenefitRedemption {
+  id: string;
+  apartmentId: "pradium";
+  userId: string;
+  benefitId: string;
+  benefitTitle: string;
+  partnerId: string;
+  partnerName: string;
+  periodKey: string;
+  status: BenefitRedemptionStatus;
+  createdAt: unknown;
+  usedAt: unknown | null;
+  usedBy: "partner-on-user-phone" | null;
+  monthlyLimit: number;
+}
+
+export interface BenefitUsagePeriod {
+  id: string;
+  userId: string;
+  benefitId: string;
+  apartmentId: "pradium";
+  periodKey: string;
+  usedCount: number;
+  monthlyLimit: number;
+  lastUsedAt: unknown | null;
+  updatedAt: unknown | null;
 }
 
 export interface Notice {

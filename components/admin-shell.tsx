@@ -20,7 +20,7 @@ const NAV: {
   { label: "대시보드", icon: LayoutDashboard, href: "/admin" },
   { label: "입주민 승인", icon: UserCheck, href: "/admin/users" },
   { label: "공동구매 관리", icon: Users, href: "/admin/group-buy" },
-  { label: "쿠폰 사용내역", icon: TicketCheck, href: "/admin/coupons" },
+  { label: "혜택 사용내역", icon: TicketCheck, href: "/admin/coupons" },
   { label: "제휴업체 문의", icon: Store, href: "/admin/partner-inquiries" },
   { label: "아파트 도입 문의", icon: Building2, href: "/admin/apartment-inquiries" },
   { label: "혜택 관리", icon: Gift, href: "/admin" },
