@@ -314,10 +314,31 @@ export type CommunityReportReason =
   | "commercial"
   | "etc";
 
+export type CommunityTag =
+  | "question"
+  | "review"
+  | "info"
+  | "chat"
+  | "proposal"
+  | "survey"
+  | "request"
+  | "in_progress"
+  | "done"
+  | "share"
+  | "sale"
+  | "wanted"
+  | "reserved"
+  | "restaurant"
+  | "medical"
+  | "academy"
+  | "tip"
+  | "recommend";
+
 export interface CommunityPost {
   id: string;
   apartmentId: "pradium";
   category: CommunityCategory;
+  tags: CommunityTag[];
   title: string;
   content: string;
   authorId: string;

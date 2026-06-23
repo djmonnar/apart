@@ -21,6 +21,7 @@ import type {
   CommunityPost,
   CommunityReport,
   CommunityReportReason,
+  CommunityTag,
   UserProfile,
 } from "./types";
 
@@ -72,6 +73,38 @@ export const COMMUNITY_REPORT_REASON_LABEL: Record<CommunityReportReason, string
   etc: "기타",
 };
 
+export const COMMUNITY_TAG_LABEL: Record<CommunityTag, string> = {
+  question: "질문",
+  review: "후기",
+  info: "정보공유",
+  chat: "잡담",
+  proposal: "제안",
+  survey: "수요조사",
+  request: "모집요청",
+  in_progress: "진행중",
+  done: "완료",
+  share: "나눔",
+  sale: "판매",
+  wanted: "구해요",
+  reserved: "예약중",
+  restaurant: "맛집",
+  medical: "병원",
+  academy: "학원",
+  tip: "생활팁",
+  recommend: "추천",
+};
+
+export const COMMUNITY_TAGS_BY_CATEGORY: Record<CommunityCategory, CommunityTag[]> = {
+  free: ["question", "review", "info", "chat"],
+  group_request: ["proposal", "survey", "request", "in_progress", "done"],
+  market: ["share", "sale", "wanted", "reserved", "done"],
+  local_info: ["restaurant", "medical", "academy", "tip", "recommend"],
+};
+
+export const COMMUNITY_ALL_TAGS: CommunityTag[] = Array.from(
+  new Set(Object.values(COMMUNITY_TAGS_BY_CATEGORY).flat()),
+);
+
 function asCategory(value: unknown): CommunityCategory {
   if (
     value === "free" ||
@@ -102,6 +135,39 @@ function asReportReason(value: unknown): CommunityReportReason {
     return value;
   }
   return "etc";
+}
+
+function asTag(value: unknown): CommunityTag | null {
+  if (
+    value === "question" ||
+    value === "review" ||
+    value === "info" ||
+    value === "chat" ||
+    value === "proposal" ||
+    value === "survey" ||
+    value === "request" ||
+    value === "in_progress" ||
+    value === "done" ||
+    value === "share" ||
+    value === "sale" ||
+    value === "wanted" ||
+    value === "reserved" ||
+    value === "restaurant" ||
+    value === "medical" ||
+    value === "academy" ||
+    value === "tip" ||
+    value === "recommend"
+  ) {
+    return value;
+  }
+  return null;
+}
+
+export function normalizeCommunityTags(value: unknown): CommunityTag[] {
+  if (!Array.isArray(value)) return [];
+  return Array.from(
+    new Set(value.map((item) => asTag(item)).filter(Boolean) as CommunityTag[]),
+  ).slice(0, 3);
 }
 
 function toMillis(value: unknown) {
@@ -148,6 +214,7 @@ export function normalizeCommunityPost(
     id: (data.id as string | undefined) ?? id,
     apartmentId: "pradium",
     category: asCategory(data.category),
+    tags: normalizeCommunityTags(data.tags),
     title: (data.title as string | undefined) ?? "",
     content: (data.content as string | undefined) ?? "",
     authorId: (data.authorId as string | undefined) ?? "",
@@ -291,6 +358,7 @@ export function subscribeCommunityPost(
 
 export async function createCommunityPost(input: {
   category: CommunityCategory;
+  tags: CommunityTag[];
   title: string;
   content: string;
   authorId: string;
@@ -302,6 +370,7 @@ export async function createCommunityPost(input: {
     id: ref.id,
     apartmentId: APARTMENT_ID,
     category: input.category,
+    tags: normalizeCommunityTags(input.tags),
     title: input.title.trim(),
     content: input.content.trim(),
     authorId: input.authorId,
@@ -322,11 +391,13 @@ export async function createCommunityPost(input: {
 export async function updateCommunityPost(input: {
   postId: string;
   category: CommunityCategory;
+  tags: CommunityTag[];
   title: string;
   content: string;
 }) {
   await updateDoc(doc(getFirebaseDb(), POSTS_COLLECTION, input.postId), {
     category: input.category,
+    tags: normalizeCommunityTags(input.tags),
     title: input.title.trim(),
     content: input.content.trim(),
     updatedAt: serverTimestamp(),

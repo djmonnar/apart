@@ -17,6 +17,7 @@ import {
   COMMUNITY_CATEGORY_LABEL,
   COMMUNITY_REPORT_REASON_LABEL,
   COMMUNITY_STATUS_LABEL,
+  COMMUNITY_TAG_LABEL,
   adminUpdateCommunityComment,
   adminUpdateCommunityPost,
   subscribeAllCommunityComments,
@@ -163,6 +164,7 @@ export function AdminCommunityManager() {
         post.content,
         post.authorNickname,
         post.authorId,
+        ...post.tags.map((tag) => COMMUNITY_TAG_LABEL[tag]),
         author?.name,
         author?.building,
         author?.unit,
@@ -326,8 +328,16 @@ export function AdminCommunityManager() {
                       <td className="max-w-[320px] py-3">
                         <div className="flex flex-wrap items-center gap-1.5">
                           <span className="badge bg-brand-50 text-brand-700">
-                            {COMMUNITY_CATEGORY_LABEL[post.category]}
+                          {COMMUNITY_CATEGORY_LABEL[post.category]}
                           </span>
+                          {post.tags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="rounded-md bg-cream-100 px-2 py-1 text-[11px] font-semibold text-ink-faint"
+                            >
+                              #{COMMUNITY_TAG_LABEL[tag]}
+                            </span>
+                          ))}
                           {post.isPinned && (
                             <span className="badge bg-sand-100 text-brand-700">
                               <Pin className="h-3.5 w-3.5" aria-hidden />

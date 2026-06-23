@@ -7,15 +7,18 @@ import { AlertCircle, Loader2, PenLine, ShieldAlert } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import {
   COMMUNITY_CATEGORIES,
+  COMMUNITY_TAG_LABEL,
+  COMMUNITY_TAGS_BY_CATEGORY,
   createCommunityPost,
   ensureCommunityNickname,
 } from "@/lib/community";
-import type { CommunityCategory } from "@/lib/types";
+import type { CommunityCategory, CommunityTag } from "@/lib/types";
 
 export function CommunityWriteForm() {
   const router = useRouter();
   const { accessLevel, profile, user, loading } = useAuth();
   const [category, setCategory] = useState<CommunityCategory>("free");
+  const [tags, setTags] = useState<CommunityTag[]>([]);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -45,6 +48,7 @@ export function CommunityWriteForm() {
       const nickname = await ensureCommunityNickname(user.uid, profile);
       const postId = await createCommunityPost({
         category,
+        tags,
         title,
         content,
         authorId: user.uid,
@@ -85,13 +89,24 @@ export function CommunityWriteForm() {
     );
   }
 
+  const toggleTag = (tag: CommunityTag) => {
+    setTags((current) => {
+      if (current.includes(tag)) return current.filter((item) => item !== tag);
+      if (current.length >= 3) return current;
+      return [...current, tag];
+    });
+  };
+
   return (
     <form onSubmit={submit} className="card-base space-y-5 p-5 sm:p-7">
       <label className="block">
         <span className="mb-1.5 block text-sm font-medium text-ink">카테고리</span>
         <select
           value={category}
-          onChange={(event) => setCategory(event.target.value as CommunityCategory)}
+          onChange={(event) => {
+            setCategory(event.target.value as CommunityCategory);
+            setTags([]);
+          }}
           className="w-full rounded-xl border border-line bg-white px-4 py-3 text-sm text-ink outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
         >
           {COMMUNITY_CATEGORIES.map((item) => (
@@ -101,6 +116,32 @@ export function CommunityWriteForm() {
           ))}
         </select>
       </label>
+
+      <div>
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <span className="text-sm font-medium text-ink">태그</span>
+          <span className="text-xs text-ink-faint">최대 3개 선택</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {COMMUNITY_TAGS_BY_CATEGORY[category].map((tag) => {
+            const active = tags.includes(tag);
+            return (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => toggleTag(tag)}
+                className={`rounded-full px-3 py-2 text-xs font-semibold transition-colors ${
+                  active
+                    ? "bg-brand-600 text-cream-50"
+                    : "border border-line bg-white text-ink-soft hover:text-brand-700"
+                }`}
+              >
+                #{COMMUNITY_TAG_LABEL[tag]}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       <label className="block">
         <span className="mb-1.5 block text-sm font-medium text-ink">제목</span>

@@ -318,6 +318,7 @@ service cloud.firestore {
           'id',
           'apartmentId',
           'category',
+          'tags',
           'title',
           'content',
           'authorId',
@@ -335,6 +336,8 @@ service cloud.firestore {
         && request.resource.data.id == postId
         && request.resource.data.apartmentId == 'pradium'
         && validCommunityCategory(request.resource.data.category)
+        && request.resource.data.tags is list
+        && request.resource.data.tags.size() <= 3
         && request.resource.data.title is string
         && request.resource.data.content is string
         && request.resource.data.authorId == request.auth.uid
@@ -355,11 +358,14 @@ service cloud.firestore {
         && resource.data.authorId == request.auth.uid
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'category',
+          'tags',
           'title',
           'content',
           'updatedAt'
         ])
         && validCommunityCategory(request.resource.data.category)
+        && request.resource.data.tags is list
+        && request.resource.data.tags.size() <= 3
         && request.resource.data.title is string
         && request.resource.data.content is string
         && request.resource.data.updatedAt == request.time;

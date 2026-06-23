@@ -20,6 +20,8 @@ import {
   COMMUNITY_REPORT_REASONS,
   COMMUNITY_REPORT_REASON_LABEL,
   COMMUNITY_STATUS_LABEL,
+  COMMUNITY_TAG_LABEL,
+  COMMUNITY_TAGS_BY_CATEGORY,
   adminUpdateCommunityPost,
   createCommunityComment,
   ensureCommunityNickname,
@@ -36,6 +38,7 @@ import type {
   CommunityComment,
   CommunityPost,
   CommunityReportReason,
+  CommunityTag,
 } from "@/lib/types";
 
 export function CommunityDetail({ postId }: { postId: string }) {
@@ -50,6 +53,7 @@ export function CommunityDetail({ postId }: { postId: string }) {
   const [submittingComment, setSubmittingComment] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editCategory, setEditCategory] = useState<CommunityCategory>("free");
+  const [editTags, setEditTags] = useState<CommunityTag[]>([]);
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
   const [reportTarget, setReportTarget] = useState<
@@ -71,6 +75,7 @@ export function CommunityDetail({ postId }: { postId: string }) {
         setLoading(false);
         if (item) {
           setEditCategory(item.category);
+          setEditTags(item.tags);
           setEditTitle(item.title);
           setEditContent(item.content);
         }
@@ -147,6 +152,7 @@ export function CommunityDetail({ postId }: { postId: string }) {
       await updateCommunityPost({
         postId: visiblePost.id,
         category: editCategory,
+        tags: editTags,
         title: editTitle,
         content: editContent,
       });
@@ -174,6 +180,14 @@ export function CommunityDetail({ postId }: { postId: string }) {
     } catch {
       setNotice("댓글 삭제 중 오류가 발생했습니다.");
     }
+  };
+
+  const toggleEditTag = (tag: CommunityTag) => {
+    setEditTags((current) => {
+      if (current.includes(tag)) return current.filter((item) => item !== tag);
+      if (current.length >= 3) return current;
+      return [...current, tag];
+    });
   };
 
   if (loading || authLoading) {
@@ -225,7 +239,10 @@ export function CommunityDetail({ postId }: { postId: string }) {
           <div className="mt-5 space-y-4">
             <select
               value={editCategory}
-              onChange={(event) => setEditCategory(event.target.value as CommunityCategory)}
+              onChange={(event) => {
+                setEditCategory(event.target.value as CommunityCategory);
+                setEditTags([]);
+              }}
               className="w-full rounded-xl border border-line bg-white px-4 py-3 text-sm text-ink outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
             >
               {COMMUNITY_CATEGORIES.map((item) => (
@@ -234,6 +251,31 @@ export function CommunityDetail({ postId }: { postId: string }) {
                 </option>
               ))}
             </select>
+            <div>
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <span className="text-sm font-medium text-ink">태그</span>
+                <span className="text-xs text-ink-faint">최대 3개 선택</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {COMMUNITY_TAGS_BY_CATEGORY[editCategory].map((tag) => {
+                  const active = editTags.includes(tag);
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => toggleEditTag(tag)}
+                      className={`rounded-full px-3 py-2 text-xs font-semibold transition-colors ${
+                        active
+                          ? "bg-brand-600 text-cream-50"
+                          : "border border-line bg-white text-ink-soft hover:text-brand-700"
+                      }`}
+                    >
+                      #{COMMUNITY_TAG_LABEL[tag]}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
             <input
               value={editTitle}
               onChange={(event) => setEditTitle(event.target.value)}
@@ -271,6 +313,18 @@ export function CommunityDetail({ postId }: { postId: string }) {
                 {comments.length}
               </span>
             </div>
+            {visiblePost.tags.length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {visiblePost.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full bg-cream-100 px-3 py-1.5 text-xs font-semibold text-ink-soft"
+                  >
+                    #{COMMUNITY_TAG_LABEL[tag]}
+                  </span>
+                ))}
+              </div>
+            )}
             <div className="mt-7 whitespace-pre-wrap break-words text-sm leading-7 text-ink sm:text-base">
               {visiblePost.content}
             </div>
