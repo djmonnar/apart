@@ -34,6 +34,11 @@ export function SiteFooter() {
           <h3 className="text-sm font-semibold text-cream-100">이용안내</h3>
           <ul className="mt-3 space-y-2.5 text-sm text-cream-300/80">
             <li>
+              <Link href="/welcome" className="hover:text-cream-50">
+                입주민 안내
+              </Link>
+            </li>
+            <li>
               <Link href="/#guide" className="hover:text-cream-50">
                 이용 가이드
               </Link>
@@ -78,6 +83,10 @@ export function SiteFooter() {
           <div className="flex flex-col gap-1">
             <p>운영: 단지라운지 · 대상 단지: 진주역 스카이시티프라디움 입주민 전용</p>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <Link href="/welcome" className="hover:text-cream-100">
+                입주민 안내
+              </Link>
+              <span aria-hidden>·</span>
               <Link href="/partner" className="hover:text-cream-100">
                 제휴문의
               </Link>
