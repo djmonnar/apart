@@ -21,9 +21,9 @@ const PREVIEW_GROUP_BUY_IDS = ["gb-aircon", "gb-banchan", "gb-curtain"];
 // 권한(쿠키)에 따라 서버에서 혜택을 정제하므로 동적 렌더
 export const dynamic = "force-dynamic";
 
-export default function HomePage() {
+export default async function HomePage() {
   const level = getServerAccessLevel();
-  const featured = getFeaturedBenefits();
+  const featured = await getFeaturedBenefits();
 
   // 공동구매 미리보기 — 권한별 서버 정제
   const groupBuyPreview = PREVIEW_GROUP_BUY_IDS.map((id) => getGroupBuy(id))

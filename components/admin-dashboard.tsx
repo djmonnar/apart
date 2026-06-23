@@ -6,20 +6,30 @@ import {
   AlertCircle,
   Building2,
   ClipboardList,
+  Gift,
   Loader2,
   Store,
+  TicketCheck,
   UserCheck,
   Users,
 } from "lucide-react";
 import { groupBuys } from "@/data/group-buys";
 import { subscribeAdminUsers } from "@/lib/admin-users";
 import { subscribeApartmentInquiries } from "@/lib/apartment-inquiries";
+import { subscribeBenefits, subscribePartners } from "@/lib/benefit-cms";
+import {
+  getKoreaPeriodKey,
+  subscribeAllBenefitRedemptions,
+} from "@/lib/benefit-redemptions";
 import { subscribeAllGroupBuyApplications } from "@/lib/group-buy-applications";
 import { subscribePartnerInquiries } from "@/lib/partner-inquiries";
 import { formatFirestoreDate } from "@/lib/format";
 import type {
   ApartmentInquiry,
+  Benefit,
+  BenefitRedemption,
   GroupBuyApplication,
+  Partner,
   PartnerInquiry,
   UserProfile,
 } from "@/lib/types";
@@ -57,6 +67,9 @@ export function AdminDashboard() {
   const [applications, setApplications] = useState<GroupBuyApplication[]>([]);
   const [partnerInquiries, setPartnerInquiries] = useState<PartnerInquiry[]>([]);
   const [apartmentInquiries, setApartmentInquiries] = useState<ApartmentInquiry[]>([]);
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [benefits, setBenefits] = useState<Benefit[]>([]);
+  const [redemptions, setRedemptions] = useState<BenefitRedemption[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -67,6 +80,9 @@ export function AdminDashboard() {
       applications: false,
       partnerInquiries: false,
       apartmentInquiries: false,
+      partners: false,
+      benefits: false,
+      redemptions: false,
     };
     const markLoaded = (key: keyof typeof loaded) => {
       loaded[key] = true;
@@ -122,6 +138,33 @@ export function AdminDashboard() {
           },
         ),
       );
+      unsubscribers.push(
+        subscribePartners(
+          (next) => {
+            setPartners(next);
+            markLoaded("partners");
+          },
+          () => markLoaded("partners"),
+        ),
+      );
+      unsubscribers.push(
+        subscribeBenefits(
+          (next) => {
+            setBenefits(next);
+            markLoaded("benefits");
+          },
+          () => markLoaded("benefits"),
+        ),
+      );
+      unsubscribers.push(
+        subscribeAllBenefitRedemptions(
+          (next) => {
+            setRedemptions(next);
+            markLoaded("redemptions");
+          },
+          () => markLoaded("redemptions"),
+        ),
+      );
     } catch {
       setError("Firebase 환경변수가 설정되지 않았습니다.");
       setLoading(false);
@@ -149,6 +192,19 @@ export function AdminDashboard() {
     const activeGroupBuys = groupBuys.filter((item) =>
       ["survey", "recruiting", "achieved"].includes(item.status),
     );
+    const currentPeriodKey = getKoreaPeriodKey();
+    const usedThisMonth = redemptions.filter(
+      (item) => item.status === "used" && item.periodKey === currentPeriodKey,
+    );
+    const usedCountByBenefit = usedThisMonth.reduce<Record<string, number>>(
+      (acc, item) => {
+        acc[item.benefitTitle] = (acc[item.benefitTitle] ?? 0) + 1;
+        return acc;
+      },
+      {},
+    );
+    const topBenefit =
+      Object.entries(usedCountByBenefit).sort((a, b) => b[1] - a[1])[0] ?? null;
 
     return {
       pendingUsers,
@@ -157,8 +213,22 @@ export function AdminDashboard() {
       openPartnerInquiries,
       openApartmentInquiries,
       activeGroupBuys,
+      totalPartners: partners.length,
+      activePartners: partners.filter((item) => item.status === "active").length,
+      activeBenefits: benefits.filter((item) => item.status === "active").length,
+      pausedBenefits: benefits.filter((item) => item.status === "paused").length,
+      usedThisMonth,
+      topBenefit,
     };
-  }, [apartmentInquiries, applications, partnerInquiries, users]);
+  }, [
+    apartmentInquiries,
+    applications,
+    benefits,
+    partnerInquiries,
+    partners,
+    redemptions,
+    users,
+  ]);
 
   const cards = [
     {
@@ -202,6 +272,29 @@ export function AdminDashboard() {
       value: summary.activeGroupBuys.length,
       href: "/admin/group-buy",
       sub: "수요조사/모집/목표달성",
+    },
+    {
+      icon: Store,
+      label: "전체 업체 수",
+      value: summary.totalPartners,
+      href: "/admin/partners",
+      sub: `활성 ${summary.activePartners}개`,
+    },
+    {
+      icon: Gift,
+      label: "활성 혜택 수",
+      value: summary.activeBenefits,
+      href: "/admin/benefits",
+      sub: `일시중지 ${summary.pausedBenefits}개`,
+    },
+    {
+      icon: TicketCheck,
+      label: "이번 달 사용 완료",
+      value: summary.usedThisMonth.length,
+      href: "/admin/coupons",
+      sub: summary.topBenefit
+        ? `최다 ${summary.topBenefit[0]} ${summary.topBenefit[1]}회`
+        : "사용 내역 없음",
     },
   ];
 

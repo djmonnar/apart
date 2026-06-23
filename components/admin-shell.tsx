@@ -23,8 +23,8 @@ const NAV: {
   { label: "혜택 사용내역", icon: TicketCheck, href: "/admin/coupons" },
   { label: "제휴업체 문의", icon: Store, href: "/admin/partner-inquiries" },
   { label: "아파트 도입 문의", icon: Building2, href: "/admin/apartment-inquiries" },
-  { label: "혜택 관리", icon: Gift, href: "/admin" },
-  { label: "업체 관리", icon: ClipboardList, href: "/admin" },
+  { label: "혜택 관리", icon: Gift, href: "/admin/benefits" },
+  { label: "업체 관리", icon: ClipboardList, href: "/admin/partners" },
   { label: "설정", icon: Settings, href: "/admin" },
 ];
 

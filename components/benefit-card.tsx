@@ -8,6 +8,7 @@ import {
 } from "@/lib/access";
 import { SafeImage } from "./safe-image";
 import { CategoryBadge } from "./category-badge";
+import { BenefitUsageMini } from "./benefit-usage-mini";
 
 /**
  * 프레젠테이션 전용. 정제된 `view`만 받으므로 잠금 상태에서는
@@ -116,6 +117,8 @@ export function BenefitCard({
             </li>
           ))}
         </ul>
+
+        <BenefitUsageMini benefit={view} />
 
         <p className="mt-3 flex items-center gap-1 text-xs text-ink-faint">
           <MapPin className="h-3.5 w-3.5" aria-hidden />

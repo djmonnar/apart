@@ -4,36 +4,33 @@ import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { SiteShell } from "@/components/site-shell";
 import { BenefitDetail } from "@/components/benefit-detail";
-import { getBenefit } from "@/data/benefits";
-import { getPartner } from "@/data/partners";
+import { getBenefitWithPartner } from "@/lib/queries";
 import { getServerAccessLevel } from "@/lib/access-server";
 import { sanitizeBenefitByLevel } from "@/lib/access";
 
 // 권한(쿠키)에 따라 서버에서 혜택을 정제하므로 동적 렌더
 export const dynamic = "force-dynamic";
 
-export function generateMetadata({
+export async function generateMetadata({
   params,
 }: {
   params: { id: string };
-}): Metadata {
-  const benefit = getBenefit(params.id);
-  const partner = benefit ? getPartner(benefit.partnerId) : undefined;
-  return { title: partner ? `${partner.name} 혜택` : "혜택 상세" };
+}): Promise<Metadata> {
+  const item = await getBenefitWithPartner(params.id);
+  return { title: item ? `${item.partner.name} 혜택` : "혜택 상세" };
 }
 
-export default function BenefitDetailPage({
+export default async function BenefitDetailPage({
   params,
 }: {
   params: { id: string };
 }) {
-  const benefit = getBenefit(params.id);
-  const partner = benefit ? getPartner(benefit.partnerId) : undefined;
-  if (!benefit || !partner) notFound();
+  const item = await getBenefitWithPartner(params.id);
+  if (!item) notFound();
 
   const level = getServerAccessLevel();
   // 미승인 사용자에게는 상세가 제거된 view가 생성된다 (URL 직접 접근 포함)
-  const view = sanitizeBenefitByLevel(benefit, level);
+  const view = sanitizeBenefitByLevel(item.benefit, level);
 
   return (
     <SiteShell>
@@ -48,7 +45,7 @@ export default function BenefitDetailPage({
       </div>
 
       <section className="container-pad py-6">
-        <BenefitDetail view={view} partner={partner} level={level} />
+        <BenefitDetail view={view} partner={item.partner} level={level} />
       </section>
     </SiteShell>
   );

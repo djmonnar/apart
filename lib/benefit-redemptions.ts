@@ -22,6 +22,7 @@ import type {
 const REDEMPTIONS_COLLECTION = "benefitRedemptions";
 const USAGE_PERIODS_COLLECTION = "benefitUsagePeriods";
 const DEFAULT_MONTHLY_LIMIT = 1;
+const UNLIMITED_MONTHLY_LIMIT = 999999;
 
 export const BENEFIT_REDEMPTION_STATUSES: BenefitRedemptionStatus[] = [
   "ready",
@@ -115,6 +116,7 @@ export function getKoreaPeriodKey(date = new Date()) {
 }
 
 export function getBenefitMonthlyLimit(benefit: Benefit) {
+  if (benefit.isMonthlyLimited === false) return UNLIMITED_MONTHLY_LIMIT;
   return Math.max(1, Math.floor(benefit.monthlyLimitPerUser ?? DEFAULT_MONTHLY_LIMIT));
 }
 
@@ -335,6 +337,18 @@ export function subscribeMyBenefitUsagePeriods(
     where("userId", "==", userId),
   );
   return onSnapshot(q, (snap) => onChange(normalizeUsageSnapshot(snap)), onError);
+}
+
+export function subscribeMyBenefitRedemptions(
+  userId: string,
+  onChange: (items: BenefitRedemption[]) => void,
+  onError: (error: Error) => void,
+): Unsubscribe {
+  const q = query(
+    collection(getFirebaseDb(), REDEMPTIONS_COLLECTION),
+    where("userId", "==", userId),
+  );
+  return onSnapshot(q, (snap) => onChange(normalizeRedemptionSnapshot(snap)), onError);
 }
 
 export function subscribeAllBenefitRedemptions(

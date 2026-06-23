@@ -9,7 +9,8 @@
 - **Pretendard** (한글 가변 폰트, CDN 다이내믹 서브셋)
 - **lucide-react** (라인 아이콘)
 - **Firebase Auth + Firestore users 컬렉션** (입주민 가입/로그인/관리자 승인)
-- 혜택/공동구매 콘텐츠는 **mock 데이터** 유지 (실서비스 확장 시 데이터 레이어만 교체)
+- **Firestore partners/benefits 컬렉션** (업체·혜택 관리형 CMS)
+- 공동구매 콘텐츠는 일부 **mock 데이터** 유지 (추후 Firestore 전환 예정)
 
 ## 실행
 
@@ -33,6 +34,8 @@ npm run build    # 프로덕션 빌드 (전체 타입 체크)
 | `/privacy`, `/terms` | 개인정보처리방침 / 이용약관 | 기본 |
 | `/partner` | 업체용 이용 안내 + 고급 인증센터 링크 | 골격 (확장 예정) |
 | `/admin` | 관리자 대시보드 (입주민 승인/반려 등) | 골격 (확장 예정) |
+| `/admin/partners` | 업체 등록·수정·상태 관리 | ★ 완성 |
+| `/admin/benefits` | 혜택 등록·수정·월 사용 횟수 관리 | ★ 완성 |
 
 ## 디렉터리
 
@@ -43,8 +46,10 @@ lib/
   types.ts          # 도메인 타입
   constants.ts      # 카테고리·상태 메타, 서비스명
   queries.ts        # 혜택+업체 조인 뷰 모델
+  benefit-cms.ts    # Firestore 업체/혜택 CMS 클라이언트 유틸
+  seed-data.ts      # Firestore 초기 입력용 업체/혜택 데이터
   auth-context.tsx  # Firebase Auth + Firestore 프로필 기반 인증 컨텍스트
-data/               # mock 데이터 (apartments/users/partners/benefits/coupons/notices)
+data/               # fallback/seed 데이터 (partners/benefits) + mock 데이터
 public/assets/      # 이미지 자산 (아파트 외관, 업체 사진 등)
 ```
 
@@ -94,8 +99,14 @@ Firestore `users/{uid}` 기본 구조는 다음과 같습니다.
 매장 직원은 손님 휴대폰의 혜택 사용 화면에서 **혜택명과 사용 처리 상태만** 확인합니다.
 입주민의 동·호수·연락처 등 개인정보는 업체에 **일절 제공되지 않습니다.**
 
+## 업체/혜택 CMS
+
+- 관리자는 `/admin/partners`에서 업체를 등록하고 `active / paused / draft` 상태를 관리합니다.
+- 관리자는 `/admin/benefits`에서 업체별 혜택과 `monthlyLimitPerUser`를 설정합니다.
+- 입주민 화면의 `/benefits`, `/benefits/[id]`는 Firestore의 `active` 혜택만 표시합니다.
+- Firestore가 비어 있거나 Admin SDK 환경이 없으면 `data/partners.ts`, `data/benefits.ts` fallback 데이터가 표시됩니다.
+
 ## 실서비스 확장 가이드
 
-- `data/*` → 실제 API/Firestore 조회로 교체 (타입은 그대로 사용)
-- `lib/auth-context.tsx` → 실제 인증으로 교체 (Provider 내부만 변경)
 - 고급 인증센터(`/partner/verify`) → 추후 쿠폰번호/QR 인증이 필요해질 때 확장
+- 공동구매 콘텐츠 → 추후 Firestore CMS로 전환

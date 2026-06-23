@@ -78,8 +78,12 @@ export function BenefitDetail({
             {!view.locked && (
               <span className="inline-flex items-center gap-1.5">
                 <CalendarDays className="h-4 w-4 text-brand-400" aria-hidden />
-                {view.validFrom.replace(/-/g, ".")} ~{" "}
-                {view.validTo.replace(/-/g, ".")}
+                {view.validFrom && view.validTo
+                  ? `${view.validFrom.replace(/-/g, ".")} ~ ${view.validTo.replace(
+                      /-/g,
+                      ".",
+                    )}`
+                  : "상시 운영"}
               </span>
             )}
           </div>
@@ -119,6 +123,24 @@ export function BenefitDetail({
               <p className="mt-1 text-xs text-ink-faint">
                 진주역 스카이시티프라디움 인증 입주민 대상
               </p>
+              {view.description && (
+                <p className="mt-3 text-sm leading-relaxed text-ink-soft">
+                  {view.description}
+                </p>
+              )}
+              {(view.originalPrice || view.benefitPrice || view.discountText) && (
+                <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                  {view.originalPrice && (
+                    <InfoChip label="정상가" value={view.originalPrice} />
+                  )}
+                  {view.benefitPrice && (
+                    <InfoChip label="혜택가" value={view.benefitPrice} />
+                  )}
+                  {view.discountText && (
+                    <InfoChip label="할인/제공" value={view.discountText} />
+                  )}
+                </div>
+              )}
               <ul className="mt-4 grid gap-2 sm:grid-cols-2">
                 {view.summary.map((line) => (
                   <li
@@ -153,6 +175,28 @@ export function BenefitDetail({
                 </li>
               </ul>
             </div>
+
+            {view.usageGuide.length > 0 && (
+              <div className="mt-7">
+                <h2 className="flex items-center gap-1.5 text-base font-bold text-ink">
+                  <CheckCircle2 className="h-4 w-4 text-brand-400" aria-hidden />
+                  이용 방법
+                </h2>
+                <ol className="mt-3 space-y-2">
+                  {view.usageGuide.map((guide, index) => (
+                    <li
+                      key={guide}
+                      className="flex items-start gap-2 text-sm text-ink-soft"
+                    >
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sand-100 text-[11px] font-bold text-brand-600">
+                        {index + 1}
+                      </span>
+                      {guide}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
           </>
         )}
       </div>
@@ -172,6 +216,15 @@ export function BenefitDetail({
           </>
         )}
       </aside>
+    </div>
+  );
+}
+
+function InfoChip({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl bg-white px-3.5 py-2.5 shadow-soft">
+      <p className="text-[11px] font-semibold text-ink-faint">{label}</p>
+      <p className="mt-0.5 text-sm font-bold text-ink">{value}</p>
     </div>
   );
 }

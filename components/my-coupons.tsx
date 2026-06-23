@@ -3,21 +3,20 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AlertCircle, BarChart3, Loader2 } from "lucide-react";
-import { getBenefit } from "@/data/benefits";
-import { getPartner } from "@/data/partners";
 import { useAuth } from "@/lib/auth-context";
 import {
-  getBenefitMonthlyLimit,
   getKoreaPeriodKey,
+  subscribeMyBenefitRedemptions,
   subscribeMyBenefitUsagePeriods,
 } from "@/lib/benefit-redemptions";
 import { formatFirestoreDateTime } from "@/lib/format";
-import type { BenefitUsagePeriod } from "@/lib/types";
+import type { BenefitRedemption, BenefitUsagePeriod } from "@/lib/types";
 
 export function MyCoupons() {
   const { accessLevel, user } = useAuth();
   const userId = user?.uid;
   const [items, setItems] = useState<BenefitUsagePeriod[]>([]);
+  const [redemptions, setRedemptions] = useState<BenefitRedemption[]>([]);
   const [loading, setLoading] = useState(Boolean(user));
   const [error, setError] = useState<string | null>(null);
   const canUseBenefits = accessLevel === "approved" || accessLevel === "admin";
@@ -26,6 +25,7 @@ export function MyCoupons() {
   useEffect(() => {
     if (!userId || !canUseBenefits) {
       setItems([]);
+      setRedemptions([]);
       setLoading(false);
       return;
     }
@@ -34,7 +34,7 @@ export function MyCoupons() {
     setError(null);
 
     try {
-      return subscribeMyBenefitUsagePeriods(
+      const unsubscribeUsage = subscribeMyBenefitUsagePeriods(
         userId,
         (next) => {
           setItems(next.filter((item) => item.periodKey === periodKey));
@@ -45,6 +45,15 @@ export function MyCoupons() {
           setLoading(false);
         },
       );
+      const unsubscribeRedemptions = subscribeMyBenefitRedemptions(
+        userId,
+        setRedemptions,
+        () => undefined,
+      );
+      return () => {
+        unsubscribeUsage();
+        unsubscribeRedemptions();
+      };
     } catch {
       setError("Firebase 환경변수가 설정되지 않았습니다.");
       setLoading(false);
@@ -54,20 +63,27 @@ export function MyCoupons() {
   const rows = useMemo(
     () =>
       items.map((item) => {
-        const benefit = getBenefit(item.benefitId);
-        const partner = benefit ? getPartner(benefit.partnerId) : undefined;
-        const monthlyLimit = benefit
-          ? getBenefitMonthlyLimit(benefit)
-          : item.monthlyLimit;
+        const latest = redemptions.find(
+          (redemption) =>
+            redemption.benefitId === item.benefitId &&
+            redemption.periodKey === item.periodKey,
+        );
+        const monthlyLimit = item.monthlyLimit;
         return {
           ...item,
-          benefitTitle: benefit?.title ?? item.benefitId,
-          partnerName: partner?.name ?? "-",
+          benefitTitle: latest?.benefitTitle ?? item.benefitId,
+          partnerName: latest?.partnerName ?? "-",
           monthlyLimit,
+          monthlyLimitLabel:
+            monthlyLimit >= 999999 ? "제한 없음" : `${monthlyLimit}회`,
           remaining: Math.max(0, monthlyLimit - item.usedCount),
+          remainingLabel:
+            monthlyLimit >= 999999
+              ? "제한 없음"
+              : `${Math.max(0, monthlyLimit - item.usedCount)}회`,
         };
       }),
-    [items],
+    [items, redemptions],
   );
 
   return (
@@ -127,13 +143,13 @@ export function MyCoupons() {
                     </Link>
                   </td>
                   <td className="px-4 py-3 text-ink-soft">
-                    {item.monthlyLimit}회
+                    {item.monthlyLimitLabel}
                   </td>
                   <td className="px-4 py-3 font-bold text-ink">
                     {item.usedCount}회
                   </td>
                   <td className="px-4 py-3 text-brand-700">
-                    {item.remaining}회
+                    {item.remainingLabel}
                   </td>
                   <td className="px-4 py-3 text-ink-soft">
                     {formatFirestoreDateTime(item.lastUsedAt)}

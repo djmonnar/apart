@@ -27,6 +27,15 @@ export type ApprovalStatus =
   | "rejected"
   | "suspended";
 
+export type CmsContentStatus = "active" | "paused" | "draft";
+
+export type BenefitType =
+  | "discount"
+  | "gift"
+  | "service"
+  | "group"
+  | "other";
+
 export interface UserProfile {
   uid: string;
   email: string;
@@ -71,15 +80,23 @@ export interface User {
 export interface Partner {
   id: string;
   apartmentId: string;
+  slug: string;
   name: string;
   category: CategoryId;
   /** public/assets 내 이미지 경로 */
   image: string;
+  imageUrl: string;
   region: string; // 위치 (예: 진주시 신안동)
   /** 한 줄 소개 */
   tagline: string;
+  shortDescription: string;
   description: string;
   phone?: string;
+  address: string;
+  status: CmsContentStatus;
+  isFeatured: boolean;
+  createdAt?: unknown;
+  updatedAt?: unknown;
   partneredAt: string; // 제휴 시작일
   /** 추천(특별가) 노출 여부 */
   featured?: boolean;
@@ -88,17 +105,33 @@ export interface Partner {
 export interface Benefit {
   id: string;
   partnerId: string;
+  partnerName?: string;
+  partnerSlug?: string;
   category: CategoryId;
   title: string; // 혜택명 (예: 컷트 20% 할인)
   /** 카드에 노출할 요약 혜택 (1~2줄) */
   summary: string[];
+  summaryText?: string;
+  description: string;
+  benefitType: BenefitType;
+  originalPrice: string;
+  benefitPrice: string;
+  discountText: string;
   /** 상세 이용 조건 */
   conditions: string[];
+  usageGuide: string[];
+  imageUrl: string;
+  status: CmsContentStatus;
+  isFeatured: boolean;
   validFrom: string;
   validTo: string;
   /** 1인 사용 제한 (예: 1회) */
   usageLimit: string;
-  monthlyLimitPerUser?: number;
+  monthlyLimitPerUser: number;
+  isMonthlyLimited: boolean;
+  resetDay: 1;
+  createdAt?: unknown;
+  updatedAt?: unknown;
   highlight?: boolean; // 메인 추천 노출
 }
 

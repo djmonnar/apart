@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 
 const VALID = Object.keys(CATEGORY_LABEL) as CategoryId[];
 
-export default function BenefitsPage({
+export default async function BenefitsPage({
   searchParams,
 }: {
   searchParams: { category?: string };
@@ -26,7 +26,8 @@ export default function BenefitsPage({
     raw && VALID.includes(raw as CategoryId) ? (raw as CategoryId) : "all";
 
   // 서버에서 권한별 정제: 미승인 사용자에게는 상세 혜택이 전송되지 않음
-  const items: BrowserItem[] = getBenefitsWithPartner().map(
+  const benefitsWithPartner = await getBenefitsWithPartner();
+  const items: BrowserItem[] = benefitsWithPartner.map(
     ({ benefit, partner }) => ({
       view: sanitizeBenefitByLevel(benefit, level),
       partner,

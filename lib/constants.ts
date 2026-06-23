@@ -60,7 +60,9 @@ export const INTERNAL_NAME = "단지라운지";
 import type {
   ApartmentInquiryRole,
   ApartmentInquiryStatus,
+  BenefitType,
   BenefitRedemptionStatus,
+  CmsContentStatus,
   CouponStatus,
   GroupBuyStatus,
   GroupBuyApplicationStatus,
@@ -119,6 +121,23 @@ export const PARTNER_INQUIRY_STATUS_META: Record<
   new: { label: "신규", tone: "info" },
   checking: { label: "확인중", tone: "warning" },
   done: { label: "처리완료", tone: "success" },
+};
+
+export const CMS_CONTENT_STATUS_META: Record<
+  CmsContentStatus,
+  { label: string; tone: Tone }
+> = {
+  active: { label: "활성", tone: "success" },
+  paused: { label: "일시중지", tone: "warning" },
+  draft: { label: "초안", tone: "neutral" },
+};
+
+export const BENEFIT_TYPE_LABEL: Record<BenefitType, string> = {
+  discount: "할인",
+  gift: "증정",
+  service: "서비스",
+  group: "공동구매",
+  other: "기타",
 };
 
 export const COUPON_STATUS_META: Record<

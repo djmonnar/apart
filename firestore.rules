@@ -190,6 +190,16 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+    match /partners/{partnerId} {
+      allow read: if isAdmin() || resource.data.status == 'active';
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /benefits/{benefitId} {
+      allow read: if isAdmin() || resource.data.status == 'active';
+      allow create, update, delete: if isAdmin();
+    }
+
     function validCouponCreate(couponId) {
       return request.resource.data.keys().hasOnly([
           'id',

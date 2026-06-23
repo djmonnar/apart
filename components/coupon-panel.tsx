@@ -41,6 +41,7 @@ export function CouponPanel({
   const allowed = accessLevel === "admin" || canIssueCoupon(profile);
   const periodKey = getKoreaPeriodKey();
   const monthlyLimit = getBenefitMonthlyLimit(benefit);
+  const isMonthlyLimited = benefit.isMonthlyLimited !== false;
   const [usage, setUsage] = useState<BenefitUsagePeriod | null>(null);
   const [redemption, setRedemption] = useState<BenefitRedemption | null>(null);
   const [loadingUsage, setLoadingUsage] = useState(Boolean(user && allowed));
@@ -51,6 +52,8 @@ export function CouponPanel({
 
   const usedCount = usage?.usedCount ?? 0;
   const remaining = Math.max(0, monthlyLimit - usedCount);
+  const remainingLabel = isMonthlyLimited ? `${remaining}회` : "제한 없음";
+  const monthlyLimitLabel = isMonthlyLimited ? `${monthlyLimit}회` : "제한 없음";
   const isUsed = redemption?.status === "used";
   const isReady = redemption?.status === "ready";
 
@@ -98,7 +101,7 @@ export function CouponPanel({
       return;
     }
 
-    if (remaining <= 0) {
+    if (isMonthlyLimited && remaining <= 0) {
       setError("이번 달 사용 가능 횟수를 모두 사용했습니다.");
       return;
     }
@@ -208,9 +211,9 @@ export function CouponPanel({
           </p>
         ) : (
           <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-            <UsageMetric label="월 사용 가능" value={monthlyLimit} />
-            <UsageMetric label="사용" value={usedCount} />
-            <UsageMetric label="남은 횟수" value={remaining} strong />
+            <UsageMetric label="월 사용 가능" value={monthlyLimitLabel} />
+            <UsageMetric label="사용" value={`${usedCount}회`} />
+            <UsageMetric label="남은 횟수" value={remainingLabel} strong />
           </div>
         )}
       </div>
@@ -221,7 +224,7 @@ export function CouponPanel({
             매장에서 혜택을 이용할 때 직원에게 이 화면을 보여주세요. 사용 완료
             버튼이 눌렸을 때만 이번 달 사용 횟수가 차감됩니다.
           </p>
-          {remaining <= 0 ? (
+          {isMonthlyLimited && remaining <= 0 ? (
             <div className="mt-5 rounded-2xl bg-amber-50 p-4 text-sm leading-relaxed text-amber-700">
               이번 달 사용 가능 횟수를 모두 사용했습니다. 다음 달 1일에 다시
               이용할 수 있습니다.
@@ -263,9 +266,9 @@ export function CouponPanel({
             <dl className="mt-4 space-y-2 text-sm">
               <RedemptionRow label="업체명" value={partner.name} />
               <RedemptionRow label="혜택명" value={benefit.title} />
-              <RedemptionRow label="월 사용 가능 횟수" value={`${monthlyLimit}회`} />
+              <RedemptionRow label="월 사용 가능 횟수" value={monthlyLimitLabel} />
               <RedemptionRow label="이번 달 사용 횟수" value={`${usedCount}회`} />
-              <RedemptionRow label="남은 횟수" value={`${remaining}회`} />
+              <RedemptionRow label="남은 횟수" value={remainingLabel} />
               {isUsed && (
                 <RedemptionRow
                   label="사용일시"
@@ -311,7 +314,7 @@ export function CouponPanel({
           {isUsed && (
             <div className="mt-4 rounded-2xl bg-emerald-50 p-4 text-sm leading-relaxed text-emerald-700">
               <p className="font-bold">사용 완료되었습니다.</p>
-              <p className="mt-1">이번 달 남은 횟수는 {remaining}회입니다.</p>
+              <p className="mt-1">이번 달 남은 횟수는 {remainingLabel}입니다.</p>
               <p className="mt-1">다음 달 1일에 사용 가능 횟수가 다시 충전됩니다.</p>
             </div>
           )}
@@ -367,7 +370,7 @@ function UsageMetric({
   strong,
 }: {
   label: string;
-  value: number;
+  value: string;
   strong?: boolean;
 }) {
   return (
