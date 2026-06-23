@@ -127,6 +127,26 @@ function timestampSortValue(value: unknown) {
   return 0;
 }
 
+/**
+ * Firestore Timestamp/Date를 직렬화 가능한 ISO 문자열로 변환.
+ * (서버 컴포넌트 → 클라이언트 컴포넌트로 Timestamp 객체를 넘기면
+ *  "Only plain objects..." RSC 직렬화 에러가 발생하므로 반드시 변환)
+ */
+function toIsoOrNull(value: unknown): string | null {
+  if (!value) return null;
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    "toDate" in value &&
+    typeof (value as { toDate: unknown }).toDate === "function"
+  ) {
+    return (value as { toDate: () => Date }).toDate().toISOString();
+  }
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value === "string") return value;
+  return null;
+}
+
 export function normalizePartner(
   id: string,
   data: Record<string, unknown>,
@@ -160,8 +180,8 @@ export function normalizePartner(
     address: (data.address as string | undefined) ?? "",
     status: asStatus(data.status),
     isFeatured,
-    createdAt: data.createdAt ?? null,
-    updatedAt: data.updatedAt ?? null,
+    createdAt: toIsoOrNull(data.createdAt),
+    updatedAt: toIsoOrNull(data.updatedAt),
     partneredAt: (data.partneredAt as string | undefined) ?? "",
     featured: isFeatured,
   };
@@ -205,8 +225,8 @@ export function normalizeBenefit(
     monthlyLimitPerUser,
     isMonthlyLimited,
     resetDay: 1,
-    createdAt: data.createdAt ?? null,
-    updatedAt: data.updatedAt ?? null,
+    createdAt: toIsoOrNull(data.createdAt),
+    updatedAt: toIsoOrNull(data.updatedAt),
     highlight: isFeatured,
   };
 }

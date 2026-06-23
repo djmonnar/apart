@@ -4,6 +4,7 @@ import {
   ClipboardList,
   Gift,
   LayoutDashboard,
+  ListChecks,
   Settings,
   Store,
   TicketCheck,
@@ -25,6 +26,7 @@ const NAV: {
   { label: "아파트 도입 문의", icon: Building2, href: "/admin/apartment-inquiries" },
   { label: "혜택 관리", icon: Gift, href: "/admin/benefits" },
   { label: "업체 관리", icon: ClipboardList, href: "/admin/partners" },
+  { label: "시연 체크리스트", icon: ListChecks, href: "/admin/demo-checklist" },
   { label: "설정", icon: Settings, href: "/admin" },
 ];
 
