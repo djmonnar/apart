@@ -110,3 +110,19 @@ Firestore `users/{uid}` 기본 구조는 다음과 같습니다.
 
 - 고급 인증센터(`/partner/verify`) → 추후 쿠폰번호/QR 인증이 필요해질 때 확장
 - 공동구매 콘텐츠 → 추후 Firestore CMS로 전환
+
+## 시연용 데모 데이터 seed
+
+`partners` / `benefits` 컬렉션에 시연용 업체·혜택을 넣습니다(slug 기준 idempotent upsert이라 중복 생성 안 됨).
+
+```bash
+npm run seed:demo
+# 내부: tsx scripts/seed-demo-data.ts
+```
+
+필요 환경변수 (`.env.local` 또는 셸):
+- `FIREBASE_SERVICE_ACCOUNT_KEY` = 서비스 계정 JSON 전체 문자열
+- (또는) `FIREBASE_PROJECT_ID` + `FIREBASE_CLIENT_EMAIL` + `FIREBASE_PRIVATE_KEY`
+
+> 업체 7개 / 혜택 7개가 `status: active`로 등록됩니다. 문서 id는 `ptn-<slug>` / `bnf-<slug>`.
+> 관리자 시연 준비 상태는 `/admin/demo-checklist`에서 실시간 점검할 수 있습니다.
