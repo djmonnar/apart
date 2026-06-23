@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { getAuth } from "firebase-admin/auth";
 import { FieldValue, type Timestamp } from "firebase-admin/firestore";
 import { getFirebaseAdminApp, getFirebaseAdminDb } from "@/lib/firebase-admin";
 import type {
@@ -151,6 +150,9 @@ async function verifyRequest(request: Request) {
   const header = request.headers.get("authorization") ?? "";
   const token = header.startsWith("Bearer ") ? header.slice(7).trim() : "";
   if (!token) return null;
+  // 동적 import: firebase-admin/auth(jose ESM) 정적 import 시 서버리스 번들에서
+  // ERR_REQUIRE_ESM이 발생하므로 사용 시점에 로드한다.
+  const { getAuth } = await import("firebase-admin/auth");
   return getAuth(getFirebaseAdminApp()).verifyIdToken(token);
 }
 
