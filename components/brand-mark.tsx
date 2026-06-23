@@ -1,18 +1,24 @@
 /** 진주역 스카이시티프라디움 워드마크 — 아치형 엠블럼 + 한글 서비스명 */
-export function BrandMark({ tone = "dark" }: { tone?: "dark" | "light" }) {
+export function BrandMark({
+  tone = "dark",
+  compact = false,
+}: {
+  tone?: "dark" | "light";
+  compact?: boolean;
+}) {
   const main = tone === "light" ? "#FAF6EF" : "#5F472C";
   const sub = tone === "light" ? "#E5D7C2" : "#9A9085";
   const gold = tone === "light" ? "#D9C39A" : "#C2A36B";
 
   return (
-    <span className="flex items-center gap-2.5">
+    <span className="flex min-w-0 items-center gap-2.5">
       <svg
         width="38"
         height="34"
         viewBox="0 0 38 34"
         fill="none"
         aria-hidden
-        className="shrink-0"
+        className={compact ? "h-8 w-9 shrink-0 sm:h-[34px] sm:w-[38px]" : "shrink-0"}
       >
         {/* 아치 */}
         <path
@@ -35,14 +41,21 @@ export function BrandMark({ tone = "dark" }: { tone?: "dark" | "light" }) {
           strokeLinecap="round"
         />
       </svg>
-      <span className="flex flex-col leading-tight">
+      <span className="flex min-w-0 flex-col leading-tight">
         <span
-          className="text-[15px] font-bold tracking-tight"
+          className={`whitespace-nowrap font-bold tracking-tight ${
+            compact ? "text-[13px] sm:text-[15px]" : "text-[15px]"
+          }`}
           style={{ color: main }}
         >
           진주역 스카이시티프라디움
         </span>
-        <span className="text-[11px] font-medium" style={{ color: sub }}>
+        <span
+          className={`whitespace-nowrap font-medium ${
+            compact ? "hidden text-[11px] sm:block" : "text-[11px]"
+          }`}
+          style={{ color: sub }}
+        >
           입주민 전용 복지몰 · 단지라운지
         </span>
       </span>
