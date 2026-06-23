@@ -11,6 +11,7 @@ const NAV = [
   { label: "복지몰 홈", href: "/" },
   { label: "혜택 안내", href: "/benefits" },
   { label: "공동구매", href: "/group-buy" },
+  { label: "커뮤니티", href: "/community" },
   { label: "아파트 도입문의", href: "/apartment" },
   { label: "이용 가이드", href: "/#guide" },
   { label: "공지사항", href: "/#notice" },

@@ -48,6 +48,7 @@ export function normalizeUserProfile(
     uid: (data.uid as string | undefined) ?? id,
     email: (data.email as string | undefined) ?? "",
     name: (data.name as string | undefined) ?? "-",
+    nickname: (data.nickname as string | undefined) ?? "",
     phone: (data.phone as string | undefined) ?? "-",
     building:
       (data.building as string | undefined) ??

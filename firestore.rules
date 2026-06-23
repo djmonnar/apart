@@ -39,6 +39,7 @@ service cloud.firestore {
           'phone',
           'building',
           'unit',
+          'nickname',
           'apartmentId',
           'role',
           'approvalStatus',
@@ -48,6 +49,7 @@ service cloud.firestore {
         ])
         && request.resource.data.uid == uid
         && request.resource.data.email == request.auth.token.email
+        && request.resource.data.nickname is string
         && request.resource.data.apartmentId == 'pradium'
         && request.resource.data.role == 'resident'
         && request.resource.data.approvalStatus == 'pending'
@@ -301,6 +303,219 @@ service cloud.firestore {
       allow list: if isAdmin()
                   || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow create, update, delete: if isAdmin();
+    }
+
+    function validCommunityCategory(value) {
+      return value in ['free', 'group_request', 'market', 'local_info'];
+    }
+
+    function validCommunityReportReason(value) {
+      return value in ['spam', 'abuse', 'privacy', 'commercial', 'etc'];
+    }
+
+    function validCommunityPostCreate(postId) {
+      return request.resource.data.keys().hasOnly([
+          'id',
+          'apartmentId',
+          'category',
+          'title',
+          'content',
+          'authorId',
+          'authorNickname',
+          'status',
+          'isNotice',
+          'isPinned',
+          'commentCount',
+          'likeCount',
+          'reportCount',
+          'viewCount',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.id == postId
+        && request.resource.data.apartmentId == 'pradium'
+        && validCommunityCategory(request.resource.data.category)
+        && request.resource.data.title is string
+        && request.resource.data.content is string
+        && request.resource.data.authorId == request.auth.uid
+        && request.resource.data.authorNickname is string
+        && request.resource.data.status == 'published'
+        && request.resource.data.isNotice == false
+        && request.resource.data.isPinned == false
+        && request.resource.data.commentCount == 0
+        && request.resource.data.likeCount == 0
+        && request.resource.data.reportCount == 0
+        && request.resource.data.viewCount == 0
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    function communityPostOwnerEdits() {
+      return isSignedIn()
+        && resource.data.authorId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'category',
+          'title',
+          'content',
+          'updatedAt'
+        ])
+        && validCommunityCategory(request.resource.data.category)
+        && request.resource.data.title is string
+        && request.resource.data.content is string
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    function communityPostOwnerDeletes() {
+      return isSignedIn()
+        && resource.data.authorId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status',
+          'updatedAt'
+        ])
+        && request.resource.data.status == 'deleted'
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    function communityPostCommentCountIncrements() {
+      return (isApprovedResident() || isAdmin())
+        && resource.data.status == 'published'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'commentCount',
+          'updatedAt'
+        ])
+        && request.resource.data.commentCount == resource.data.commentCount + 1
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    function communityPostReportCountIncrements(postId) {
+      let reportId = 'post_' + postId + '_' + request.auth.uid;
+      return isSignedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'reportCount',
+          'updatedAt'
+        ])
+        && request.resource.data.reportCount == resource.data.reportCount + 1
+        && request.resource.data.updatedAt == request.time
+        && !exists(/databases/$(database)/documents/communityReports/$(reportId))
+        && existsAfter(/databases/$(database)/documents/communityReports/$(reportId));
+    }
+
+    match /communityPosts/{postId} {
+      allow read: if isAdmin()
+                  || resource.data.status == 'published'
+                  || (isSignedIn() && resource.data.authorId == request.auth.uid);
+      allow create: if (isApprovedResident() || isAdmin())
+                    && validCommunityPostCreate(postId);
+      allow update: if isAdmin()
+                    || communityPostOwnerEdits()
+                    || communityPostOwnerDeletes()
+                    || communityPostCommentCountIncrements()
+                    || communityPostReportCountIncrements(postId);
+      allow delete: if isAdmin();
+    }
+
+    function validCommunityCommentCreate(commentId) {
+      let postId = request.resource.data.postId;
+      return request.resource.data.keys().hasOnly([
+          'id',
+          'postId',
+          'apartmentId',
+          'content',
+          'authorId',
+          'authorNickname',
+          'status',
+          'reportCount',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.id == commentId
+        && postId is string
+        && exists(/databases/$(database)/documents/communityPosts/$(postId))
+        && get(/databases/$(database)/documents/communityPosts/$(postId)).data.status == 'published'
+        && request.resource.data.apartmentId == 'pradium'
+        && request.resource.data.content is string
+        && request.resource.data.authorId == request.auth.uid
+        && request.resource.data.authorNickname is string
+        && request.resource.data.status == 'published'
+        && request.resource.data.reportCount == 0
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    function communityCommentOwnerDeletes() {
+      return isSignedIn()
+        && resource.data.authorId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status',
+          'updatedAt'
+        ])
+        && request.resource.data.status == 'deleted'
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    function communityCommentReportCountIncrements(commentId) {
+      let reportId = 'comment_' + commentId + '_' + request.auth.uid;
+      return isSignedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'reportCount',
+          'updatedAt'
+        ])
+        && request.resource.data.reportCount == resource.data.reportCount + 1
+        && request.resource.data.updatedAt == request.time
+        && !exists(/databases/$(database)/documents/communityReports/$(reportId))
+        && existsAfter(/databases/$(database)/documents/communityReports/$(reportId));
+    }
+
+    match /communityComments/{commentId} {
+      allow read: if isAdmin()
+                  || resource.data.status == 'published'
+                  || (isSignedIn() && resource.data.authorId == request.auth.uid);
+      allow create: if (isApprovedResident() || isAdmin())
+                    && validCommunityCommentCreate(commentId);
+      allow update: if isAdmin()
+                    || communityCommentOwnerDeletes()
+                    || communityCommentReportCountIncrements(commentId);
+      allow delete: if isAdmin();
+    }
+
+    function validCommunityReportCreate(reportId) {
+      let targetType = request.resource.data.targetType;
+      let targetId = request.resource.data.targetId;
+      return request.resource.data.keys().hasOnly([
+          'id',
+          'targetType',
+          'targetId',
+          'postId',
+          'reporterId',
+          'reason',
+          'message',
+          'createdAt'
+        ])
+        && request.resource.data.id == reportId
+        && targetType in ['post', 'comment']
+        && targetId is string
+        && reportId == targetType + '_' + targetId + '_' + request.auth.uid
+        && request.resource.data.postId is string
+        && (
+          (
+            targetType == 'post'
+            && request.resource.data.postId == targetId
+            && exists(/databases/$(database)/documents/communityPosts/$(targetId))
+          )
+          || (
+            targetType == 'comment'
+            && exists(/databases/$(database)/documents/communityComments/$(targetId))
+          )
+        )
+        && request.resource.data.reporterId == request.auth.uid
+        && validCommunityReportReason(request.resource.data.reason)
+        && request.resource.data.message is string
+        && request.resource.data.createdAt == request.time;
+    }
+
+    match /communityReports/{reportId} {
+      allow create: if isSignedIn() && validCommunityReportCreate(reportId);
+      allow read, update, delete: if isAdmin();
     }
 
     match /{document=**} {

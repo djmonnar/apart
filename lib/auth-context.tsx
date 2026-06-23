@@ -111,6 +111,7 @@ function normalizeProfile(
     uid,
     email: (data.email as string | undefined) ?? email,
     name: (data.name as string | undefined) ?? email,
+    nickname: (data.nickname as string | undefined) ?? "",
     phone: (data.phone as string | undefined) ?? "",
     building:
       (data.building as string | undefined) ??
@@ -236,6 +237,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         uid: cred.user.uid,
         email,
         name: input.name.trim(),
+        nickname: `입주민${cred.user.uid.slice(-4).toUpperCase()}`,
         phone: input.phone.trim(),
         building: input.building.trim(),
         unit: input.unit.trim(),

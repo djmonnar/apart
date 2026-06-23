@@ -40,6 +40,7 @@ export interface UserProfile {
   uid: string;
   email: string;
   name: string;
+  nickname?: string;
   phone: string;
   building: string;
   unit: string;
@@ -296,4 +297,62 @@ export interface PartnerInquiry {
   status: PartnerInquiryStatus;
   createdAt: unknown;
   updatedAt: unknown;
+}
+
+export type CommunityCategory =
+  | "free"
+  | "group_request"
+  | "market"
+  | "local_info";
+
+export type CommunityContentStatus = "published" | "hidden" | "deleted";
+
+export type CommunityReportReason =
+  | "spam"
+  | "abuse"
+  | "privacy"
+  | "commercial"
+  | "etc";
+
+export interface CommunityPost {
+  id: string;
+  apartmentId: "pradium";
+  category: CommunityCategory;
+  title: string;
+  content: string;
+  authorId: string;
+  authorNickname: string;
+  status: CommunityContentStatus;
+  isNotice: boolean;
+  isPinned: boolean;
+  commentCount: number;
+  likeCount: number;
+  reportCount: number;
+  viewCount: number;
+  createdAt: unknown;
+  updatedAt: unknown;
+}
+
+export interface CommunityComment {
+  id: string;
+  postId: string;
+  apartmentId: "pradium";
+  content: string;
+  authorId: string;
+  authorNickname: string;
+  status: CommunityContentStatus;
+  reportCount: number;
+  createdAt: unknown;
+  updatedAt: unknown;
+}
+
+export interface CommunityReport {
+  id: string;
+  targetType: "post" | "comment";
+  targetId: string;
+  postId: string;
+  reporterId: string;
+  reason: CommunityReportReason;
+  message: string;
+  createdAt: unknown;
 }
