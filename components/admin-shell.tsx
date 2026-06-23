@@ -5,6 +5,7 @@ import {
   Gift,
   LayoutDashboard,
   ListChecks,
+  QrCode,
   Settings,
   Store,
   TicketCheck,
@@ -27,6 +28,7 @@ const NAV: {
   { label: "혜택 관리", icon: Gift, href: "/admin/benefits" },
   { label: "업체 관리", icon: ClipboardList, href: "/admin/partners" },
   { label: "시연 체크리스트", icon: ListChecks, href: "/admin/demo-checklist" },
+  { label: "QR 포스터", icon: QrCode, href: "/admin/qr-poster" },
   { label: "설정", icon: Settings, href: "/admin" },
 ];
 
