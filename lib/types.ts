@@ -94,6 +94,10 @@ export interface Partner {
   description: string;
   phone?: string;
   address: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  naverMapUrl?: string;
+  locationEnabled?: boolean;
   status: CmsContentStatus;
   isFeatured: boolean;
   createdAt?: unknown;

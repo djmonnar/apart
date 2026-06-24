@@ -1,5 +1,6 @@
 import { SiteHeader } from "./site-header";
 import { SiteFooter } from "./site-footer";
+import { MobileActionBar } from "./mobile-action-bar";
 
 /** 소비자(입주민) 화면 공통 셸: 헤더 + 본문 + 푸터 */
 export function SiteShell({ children }: { children: React.ReactNode }) {
@@ -8,6 +9,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
       <SiteHeader />
       <main className="flex-1">{children}</main>
       <SiteFooter />
+      <MobileActionBar />
     </div>
   );
 }

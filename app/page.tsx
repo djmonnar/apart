@@ -10,6 +10,7 @@ import { StepsSection } from "@/components/steps-section";
 import { NoticeSection } from "@/components/notice-section";
 import { FaqSection } from "@/components/faq-section";
 import { SafeImage } from "@/components/safe-image";
+import { HomeCommunityPreview } from "@/components/home-community-preview";
 import { getFeaturedBenefits } from "@/lib/queries";
 import { getServerAccessLevel } from "@/lib/access-server";
 import { sanitizeBenefitByLevel, sanitizeGroupBuyByLevel } from "@/lib/access";
@@ -114,6 +115,8 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      <HomeCommunityPreview />
 
       {/* 프로모 배너 */}
       <section className="container-pad py-10">

@@ -101,6 +101,15 @@ function asMonthlyLimit(value: unknown) {
     : 1;
 }
 
+function asNullableNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
 function toSlug(value: string) {
   return value
     .trim()
@@ -178,6 +187,10 @@ export function normalizePartner(
       (data.description as string | undefined) ?? "입주민 전용 혜택을 제공합니다.",
     phone: (data.phone as string | undefined) ?? "",
     address: (data.address as string | undefined) ?? "",
+    latitude: asNullableNumber(data.latitude),
+    longitude: asNullableNumber(data.longitude),
+    naverMapUrl: (data.naverMapUrl as string | undefined) ?? "",
+    locationEnabled: data.locationEnabled === true,
     status: asStatus(data.status),
     isFeatured,
     createdAt: toIsoOrNull(data.createdAt),
@@ -282,6 +295,10 @@ export async function savePartner(input: Partner) {
       shortDescription: input.shortDescription || input.tagline,
       phone: input.phone ?? "",
       address: input.address,
+      latitude: input.latitude ?? null,
+      longitude: input.longitude ?? null,
+      naverMapUrl: input.naverMapUrl ?? "",
+      locationEnabled: input.locationEnabled === true,
       region: input.region,
       imageUrl: input.imageUrl || input.image,
       status: input.status,
@@ -303,6 +320,10 @@ export async function createPartner(input: Omit<Partner, "id"> & { id?: string }
     shortDescription: input.shortDescription || input.tagline,
     phone: input.phone ?? "",
     address: input.address,
+    latitude: input.latitude ?? null,
+    longitude: input.longitude ?? null,
+    naverMapUrl: input.naverMapUrl ?? "",
+    locationEnabled: input.locationEnabled === true,
     region: input.region,
     imageUrl: input.imageUrl || input.image,
     status: input.status || "draft",

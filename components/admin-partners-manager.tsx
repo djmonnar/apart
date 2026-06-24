@@ -1,7 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AlertCircle, Edit3, Loader2, Plus, Save, Search } from "lucide-react";
+import {
+  AlertCircle,
+  Edit3,
+  ExternalLink,
+  Loader2,
+  MapPin,
+  Plus,
+  Save,
+  Search,
+} from "lucide-react";
 import {
   CMS_CONTENT_STATUSES,
   createPartner,
@@ -31,6 +40,10 @@ type PartnerForm = {
   description: string;
   phone: string;
   address: string;
+  latitude: string;
+  longitude: string;
+  naverMapUrl: string;
+  locationEnabled: boolean;
   region: string;
   imageUrl: string;
   status: CmsContentStatus;
@@ -47,6 +60,10 @@ function emptyForm(): PartnerForm {
     description: "",
     phone: "",
     address: "",
+    latitude: "",
+    longitude: "",
+    naverMapUrl: "",
+    locationEnabled: false,
     region: "",
     imageUrl: "",
     status: "draft",
@@ -64,6 +81,10 @@ function toForm(item: Partner): PartnerForm {
     description: item.description,
     phone: item.phone ?? "",
     address: item.address,
+    latitude: item.latitude == null ? "" : String(item.latitude),
+    longitude: item.longitude == null ? "" : String(item.longitude),
+    naverMapUrl: item.naverMapUrl ?? "",
+    locationEnabled: item.locationEnabled === true,
     region: item.region,
     imageUrl: item.imageUrl,
     status: item.status,
@@ -86,11 +107,22 @@ function toPartner(form: PartnerForm): Partner {
     description: form.description,
     phone: form.phone,
     address: form.address,
+    latitude: toOptionalNumber(form.latitude),
+    longitude: toOptionalNumber(form.longitude),
+    naverMapUrl: form.naverMapUrl,
+    locationEnabled: form.locationEnabled,
     status: form.status,
     isFeatured: form.isFeatured,
     partneredAt: "",
     featured: form.isFeatured,
   };
+}
+
+function toOptionalNumber(value: string): number | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const parsed = Number(trimmed);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 export function AdminPartnersManager() {
@@ -303,6 +335,14 @@ export function AdminPartnersManager() {
                           <Edit3 className="h-3.5 w-3.5" aria-hidden />
                           수정
                         </button>
+                        {partner.locationEnabled &&
+                          partner.latitude != null &&
+                          partner.longitude != null && (
+                            <span className="ml-2 inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700">
+                              <MapPin className="h-3.5 w-3.5" aria-hidden />
+                              위치
+                            </span>
+                          )}
                       </td>
                     </tr>
                   );
@@ -421,6 +461,71 @@ export function AdminPartnersManager() {
               className={inputCls}
             />
           </Field>
+          <div className="rounded-2xl border border-line bg-cream-50 p-4">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <h3 className="flex items-center gap-1.5 text-sm font-bold text-ink">
+                  <MapPin className="h-4 w-4 text-brand-500" aria-hidden />
+                  지도 위치
+                </h3>
+                <p className="mt-1 text-xs leading-relaxed text-ink-faint">
+                  위도/경도를 입력하고 위치 사용을 켜면 입주민의 내 주변 제휴업체에 표시됩니다.
+                </p>
+              </div>
+              <label className="flex shrink-0 items-center gap-2 text-xs font-semibold text-ink-soft">
+                <input
+                  type="checkbox"
+                  checked={form.locationEnabled}
+                  onChange={(event) =>
+                    updateForm("locationEnabled", event.target.checked)
+                  }
+                  className="h-4 w-4 accent-brand-600"
+                />
+                위치 사용
+              </label>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="위도 latitude">
+                <input
+                  value={form.latitude}
+                  onChange={(event) => updateForm("latitude", event.target.value)}
+                  className={inputCls}
+                  placeholder="35.180000"
+                  inputMode="decimal"
+                />
+              </Field>
+              <Field label="경도 longitude">
+                <input
+                  value={form.longitude}
+                  onChange={(event) => updateForm("longitude", event.target.value)}
+                  className={inputCls}
+                  placeholder="128.107000"
+                  inputMode="decimal"
+                />
+              </Field>
+            </div>
+            <Field label="네이버지도 링크">
+              <div className="flex gap-2">
+                <input
+                  value={form.naverMapUrl}
+                  onChange={(event) => updateForm("naverMapUrl", event.target.value)}
+                  className={inputCls}
+                  placeholder="https://map.naver.com/..."
+                />
+                {form.naverMapUrl && (
+                  <a
+                    href={form.naverMapUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-line bg-white text-ink-soft hover:text-brand-700"
+                    aria-label="네이버지도 링크 열기"
+                  >
+                    <ExternalLink className="h-4 w-4" aria-hidden />
+                  </a>
+                )}
+              </div>
+            </Field>
+          </div>
           <Field label="대표 이미지 URL">
             <input
               value={form.imageUrl}

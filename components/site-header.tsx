@@ -9,11 +9,10 @@ import { BrandMark } from "./brand-mark";
 
 const NAV = [
   { label: "복지몰 홈", href: "/" },
+  { label: "커뮤니티", href: "/community", highlight: true },
+  { label: "내 주변", href: "/nearby" },
   { label: "혜택 안내", href: "/benefits" },
   { label: "공동구매", href: "/group-buy" },
-  { label: "커뮤니티", href: "/community" },
-  { label: "아파트 도입문의", href: "/apartment" },
-  { label: "이용 가이드", href: "/#guide" },
   { label: "공지사항", href: "/#notice" },
   { label: "자주 묻는 질문", href: "/#faq" },
 ];
@@ -52,8 +51,10 @@ export function SiteHeader() {
                 href={item.href}
                 className={`shrink-0 whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-semibold transition-colors 2xl:px-3 2xl:text-sm ${
                   active
-                    ? "bg-brand-50 text-brand-700"
-                    : "text-ink-soft hover:bg-brand-50 hover:text-brand-700"
+                    ? "bg-brand-600 text-cream-50"
+                    : item.highlight
+                      ? "bg-brand-50 text-brand-800 hover:bg-brand-100"
+                      : "text-ink-soft hover:bg-brand-50 hover:text-brand-700"
                 }`}
               >
                 {item.label}
@@ -114,7 +115,9 @@ export function SiteHeader() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className="whitespace-nowrap rounded-lg px-3 py-3 text-sm font-semibold text-ink-soft hover:bg-brand-50 hover:text-brand-700"
+                className={`whitespace-nowrap rounded-lg px-3 py-3 text-sm font-semibold hover:bg-brand-50 hover:text-brand-700 ${
+                  item.highlight ? "bg-brand-50 text-brand-800" : "text-ink-soft"
+                }`}
               >
                 {item.label}
               </Link>

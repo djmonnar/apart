@@ -21,6 +21,12 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+@media (max-width: 639px) {
+  body {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 82px);
+  }
+}
+
 @layer components {
   .container-pad {
     @apply mx-auto w-full max-w-content px-5 sm:px-6 lg:px-8;

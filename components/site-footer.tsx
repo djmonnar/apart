@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Mail, Clock, Handshake } from "lucide-react";
+import { Mail, Clock, Handshake, MessageCircle, PenLine } from "lucide-react";
 import { BrandMark } from "./brand-mark";
 
 export function SiteFooter() {
@@ -13,6 +13,22 @@ export function SiteFooter() {
             <br />
             프리미엄 제휴 혜택관입니다.
           </p>
+          <div className="mt-5 flex flex-wrap gap-2">
+            <Link
+              href="/community"
+              className="inline-flex items-center gap-2 rounded-xl bg-cream-50 px-4 py-2.5 text-sm font-semibold text-brand-900 transition-colors hover:bg-gold-soft"
+            >
+              <MessageCircle className="h-4 w-4" aria-hidden />
+              최신글 보기
+            </Link>
+            <Link
+              href="/community/write"
+              className="inline-flex items-center gap-2 rounded-xl border border-cream-300/25 px-4 py-2.5 text-sm font-semibold text-cream-50 transition-colors hover:bg-brand-800"
+            >
+              <PenLine className="h-4 w-4" aria-hidden />
+              글쓰기
+            </Link>
+          </div>
         </div>
 
         <div>
@@ -44,6 +60,16 @@ export function SiteFooter() {
               </Link>
             </li>
             <li>
+              <Link href="/community" className="hover:text-cream-50">
+                입주민 커뮤니티
+              </Link>
+            </li>
+            <li>
+              <Link href="/nearby" className="hover:text-cream-50">
+                내 주변 제휴업체
+              </Link>
+            </li>
+            <li>
               <Link href="/#faq" className="hover:text-cream-50">
                 자주 묻는 질문
               </Link>
@@ -62,19 +88,27 @@ export function SiteFooter() {
         </div>
 
         <div>
-          <h3 className="text-sm font-semibold text-cream-100">제휴 문의</h3>
+          <h3 className="text-sm font-semibold text-cream-100">제휴·도입 문의</h3>
           <p className="mt-3 text-sm text-cream-300/80">
-            제휴를 원하시는 업체는
+            제휴 업체와 아파트 도입 문의는
             <br />
             언제든 문의해 주세요.
           </p>
-          <Link
-            href="/partner"
-            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-sm font-semibold text-brand-900 transition-colors hover:bg-gold-soft"
-          >
-            <Handshake className="h-4 w-4" aria-hidden />
-            제휴문의하기
-          </Link>
+          <div className="mt-4 flex flex-col gap-2">
+            <Link
+              href="/partner"
+              className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-sm font-semibold text-brand-900 transition-colors hover:bg-gold-soft"
+            >
+              <Handshake className="h-4 w-4" aria-hidden />
+              제휴문의하기
+            </Link>
+            <Link
+              href="/apartment"
+              className="inline-flex items-center justify-center rounded-xl border border-cream-300/25 px-4 py-2.5 text-sm font-semibold text-cream-50 transition-colors hover:bg-brand-800"
+            >
+              아파트 도입문의
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -89,6 +123,14 @@ export function SiteFooter() {
               <span aria-hidden>·</span>
               <Link href="/partner" className="hover:text-cream-100">
                 제휴문의
+              </Link>
+              <span aria-hidden>·</span>
+              <Link href="/nearby" className="hover:text-cream-100">
+                내 주변
+              </Link>
+              <span aria-hidden>·</span>
+              <Link href="/apartment" className="hover:text-cream-100">
+                아파트 도입문의
               </Link>
               <span aria-hidden>·</span>
               <Link href="/terms" className="hover:text-cream-100">
