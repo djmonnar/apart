@@ -239,15 +239,15 @@ export function NearbyPartnersMap() {
     null;
 
   return (
-    <div className="relative min-h-[calc(100svh-64px)] overflow-hidden bg-cream lg:min-h-0 lg:overflow-visible lg:bg-transparent">
-      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_390px] lg:items-start lg:gap-6">
-        <section className="h-[calc(100svh-64px)] overflow-hidden border-b border-line bg-white shadow-card lg:sticky lg:top-20 lg:h-auto lg:rounded-3xl lg:border">
-          <div className="border-b border-line bg-cream-100/70 px-5 py-4 lg:p-5">
+    <div className="relative h-full min-h-0 overflow-hidden bg-cream lg:px-8 lg:py-6">
+      <div className="h-full min-h-0 lg:mx-auto lg:grid lg:max-w-content lg:grid-cols-[minmax(0,1fr)_390px] lg:items-stretch lg:gap-6">
+        <section className="flex h-full min-h-0 flex-col overflow-hidden border-b border-line bg-white shadow-card lg:rounded-3xl lg:border">
+          <div className="shrink-0 border-b border-line bg-cream-100/70 px-5 py-4 lg:p-5">
             <p className="section-eyebrow">NEARBY PARTNERS</p>
             <h1 className="mt-2 text-2xl font-bold text-ink sm:text-3xl">
               내 주변 제휴업체
             </h1>
-            <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+            <p className="mt-2 text-sm leading-relaxed text-ink-soft sm:text-base">
               지도에서 우리 단지 주변 제휴업체 위치와 혜택을 확인하세요.
             </p>
           </div>
@@ -259,11 +259,11 @@ export function NearbyPartnersMap() {
             clientId={clientId}
             filteredCount={filteredPartners.length}
             error={error}
-            className="h-[calc(100svh_-_190px)] min-h-[390px] lg:h-[620px] lg:min-h-0"
+            className="min-h-0 flex-1"
           />
         </section>
 
-        <aside className="absolute inset-x-0 bottom-0 z-20 flex max-h-[62vh] min-h-[300px] flex-col rounded-t-[1.75rem] border-t border-line bg-cream px-5 pt-3 shadow-[0_-18px_46px_-30px_rgba(51,39,26,0.55)] lg:static lg:max-h-[calc(100vh-6rem)] lg:min-h-0 lg:rounded-3xl lg:border lg:bg-white lg:p-5 lg:shadow-card">
+        <aside className="absolute inset-x-0 bottom-0 z-20 flex h-[46svh] min-h-[290px] max-h-[430px] flex-col rounded-t-[1.75rem] border-t border-line bg-cream px-5 pt-3 shadow-[0_-18px_46px_-30px_rgba(51,39,26,0.55)] lg:static lg:h-full lg:max-h-none lg:min-h-0 lg:rounded-3xl lg:border lg:bg-white lg:p-5 lg:shadow-card">
           <div className="mx-auto mb-3 h-1.5 w-12 shrink-0 rounded-full bg-sand-300 lg:hidden" />
 
           <div className="shrink-0 -mx-5 bg-cream px-5 pb-4 pt-1 lg:mx-0 lg:bg-white lg:px-0 lg:pb-4 lg:pt-0">
@@ -304,7 +304,7 @@ export function NearbyPartnersMap() {
             </div>
           </div>
 
-          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+96px)] pr-1 lg:pb-0">
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+18px)] pr-1 lg:pb-0">
             {loading ? (
               <div className="rounded-3xl border border-line bg-white p-8 text-center text-sm text-ink-soft shadow-card sm:bg-cream-50">
                 <Loader2 className="mr-2 inline h-4 w-4 animate-spin" aria-hidden />
