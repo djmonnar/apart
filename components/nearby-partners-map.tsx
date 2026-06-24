@@ -72,7 +72,7 @@ function mapUrl(partner: Partner) {
 
 export function NearbyPartnersMap() {
   const clientId = process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID;
-  const mapEl = useRef<HTMLDivElement | null>(null);
+  const mapEl = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
   const [partners, setPartners] = useState<Partner[]>([]);
@@ -239,21 +239,45 @@ export function NearbyPartnersMap() {
     null;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
-      <section className="overflow-hidden rounded-3xl border border-line bg-white shadow-card">
-        <div className="border-b border-line bg-cream-100/70 p-5">
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-            <div>
-              <p className="section-eyebrow">NEARBY PARTNERS</p>
-              <h1 className="mt-2 text-2xl font-bold text-ink sm:text-3xl">
-                내 주변 제휴업체
-              </h1>
-              <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-                지도에서 우리 단지 주변 제휴업체 위치와 혜택을 확인하세요.
-                제휴업체가 없을 때는 {DEFAULT_CENTER.label}을 기본으로 보여드립니다.
-              </p>
+    <div className="relative min-h-[calc(100svh-64px)] overflow-hidden bg-cream lg:min-h-0 lg:overflow-visible lg:bg-transparent">
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_390px] lg:items-start lg:gap-6">
+        <section className="h-[calc(100svh-64px)] overflow-hidden border-b border-line bg-white shadow-card lg:sticky lg:top-20 lg:h-auto lg:rounded-3xl lg:border">
+          <div className="border-b border-line bg-cream-100/70 px-5 py-4 lg:p-5">
+            <p className="section-eyebrow">NEARBY PARTNERS</p>
+            <h1 className="mt-2 text-2xl font-bold text-ink sm:text-3xl">
+              내 주변 제휴업체
+            </h1>
+            <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+              지도에서 우리 단지 주변 제휴업체 위치와 혜택을 확인하세요.
+            </p>
+          </div>
+
+          <MapCanvas
+            mapEl={mapEl}
+            loading={loading}
+            mapLoading={mapLoading}
+            clientId={clientId}
+            filteredCount={filteredPartners.length}
+            error={error}
+            className="h-[calc(100svh_-_190px)] min-h-[390px] lg:h-[620px] lg:min-h-0"
+          />
+        </section>
+
+        <aside className="absolute inset-x-0 bottom-0 z-20 flex max-h-[62vh] min-h-[300px] flex-col rounded-t-[1.75rem] border-t border-line bg-cream px-5 pt-3 shadow-[0_-18px_46px_-30px_rgba(51,39,26,0.55)] lg:static lg:max-h-[calc(100vh-6rem)] lg:min-h-0 lg:rounded-3xl lg:border lg:bg-white lg:p-5 lg:shadow-card">
+          <div className="mx-auto mb-3 h-1.5 w-12 shrink-0 rounded-full bg-sand-300 lg:hidden" />
+
+          <div className="shrink-0 -mx-5 bg-cream px-5 pb-4 pt-1 lg:mx-0 lg:bg-white lg:px-0 lg:pb-4 lg:pt-0">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-base font-bold text-ink">제휴업체 목록</h2>
+                <p className="mt-1 text-xs text-ink-faint">
+                  위치 등록 {locatedPartners.length}개 · 표시 {filteredPartners.length}개
+                </p>
+              </div>
+              <MapPin className="h-5 w-5 text-brand-500" aria-hidden />
             </div>
-            <label className="relative block xl:w-72">
+
+            <label className="relative block">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-faint" />
               <input
                 value={query}
@@ -262,103 +286,114 @@ export function NearbyPartnersMap() {
                 placeholder="업체명, 지역, 주소 검색"
               />
             </label>
-          </div>
-          <div className="mt-4 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
-            <CategoryButton
-              active={category === "all"}
-              label="전체"
-              onClick={() => setCategory("all")}
-            />
-            {categories.map((item) => (
-              <CategoryButton
-                key={item}
-                active={category === item}
-                label={CATEGORY_LABEL[item]}
-                onClick={() => setCategory(item)}
-              />
-            ))}
-          </div>
-        </div>
 
-        <div className="relative h-[420px] bg-cream-200 sm:h-[560px]">
-          <div ref={mapEl} className="h-full w-full" />
-          {(loading || mapLoading) && (
-            <div className="absolute inset-0 flex items-center justify-center bg-cream-100/80 text-sm font-medium text-ink-soft">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
-              지도를 준비하는 중입니다.
+            <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
+              <CategoryButton
+                active={category === "all"}
+                label="전체"
+                onClick={() => setCategory("all")}
+              />
+              {categories.map((item) => (
+                <CategoryButton
+                  key={item}
+                  active={category === item}
+                  label={CATEGORY_LABEL[item]}
+                  onClick={() => setCategory(item)}
+                />
+              ))}
             </div>
-          )}
-          {!clientId && (
-            <div className="absolute inset-0 flex items-center justify-center bg-cream-100/90 p-6 text-center">
-              <div className="max-w-sm">
-                <AlertCircle className="mx-auto h-7 w-7 text-amber-600" />
-                <p className="mt-3 text-sm font-semibold text-ink">
-                  네이버 지도 Client ID가 필요합니다.
-                </p>
-                <p className="mt-2 text-xs leading-relaxed text-ink-soft">
-                  `NEXT_PUBLIC_NAVER_MAP_CLIENT_ID` 환경변수를 설정해주세요.
+          </div>
+
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+96px)] pr-1 lg:pb-0">
+            {loading ? (
+              <div className="rounded-3xl border border-line bg-white p-8 text-center text-sm text-ink-soft shadow-card sm:bg-cream-50">
+                <Loader2 className="mr-2 inline h-4 w-4 animate-spin" aria-hidden />
+                업체를 불러오는 중입니다.
+              </div>
+            ) : filteredPartners.length === 0 ? (
+              <div className="rounded-3xl border border-line bg-white p-8 text-center shadow-card sm:bg-cream-50">
+                <p className="font-bold text-ink">아직 위치 등록된 제휴업체가 없습니다.</p>
+                <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+                  지도는 기본으로 {DEFAULT_CENTER.label}을 보여줍니다. 관리자에서 업체 위치와 위치 사용 여부를 설정하면 이곳에 표시됩니다.
                 </p>
               </div>
-            </div>
-          )}
-          {!loading && !mapLoading && filteredPartners.length === 0 && clientId && (
-            <div className="absolute bottom-4 left-4 right-4 rounded-2xl border border-line bg-white/95 p-4 shadow-card backdrop-blur sm:left-5 sm:right-auto sm:max-w-sm">
-              <p className="flex items-center gap-1.5 text-sm font-bold text-ink">
-                <MapPin className="h-4 w-4 text-brand-500" aria-hidden />
-                {DEFAULT_CENTER.label}
-              </p>
-              <p className="mt-1 text-xs leading-relaxed text-ink-soft">
-                아직 위치 등록된 제휴업체가 없어 기본 지역을 표시하고 있습니다.
-              </p>
-            </div>
-          )}
-        </div>
+            ) : (
+              filteredPartners.map((partner) => (
+                <PartnerLocationCard
+                  key={partner.id}
+                  partner={partner}
+                  active={partner.id === selectedPartner?.id}
+                  benefitCount={benefitCountByPartner.get(partner.id) ?? 0}
+                  onSelect={() => setSelectedId(partner.id)}
+                />
+              ))
+            )}
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}
 
-        {error && (
-          <p className="border-t border-line bg-rose-50 px-5 py-3 text-sm text-rose-600">
-            {error}
-          </p>
+function MapCanvas({
+  mapEl,
+  loading,
+  mapLoading,
+  clientId,
+  filteredCount,
+  error,
+  className,
+}: {
+  mapEl: React.RefObject<HTMLDivElement>;
+  loading: boolean;
+  mapLoading: boolean;
+  clientId: string | undefined;
+  filteredCount: number;
+  error: string | null;
+  className: string;
+}) {
+  return (
+    <>
+      <div className={`relative overflow-hidden bg-cream-200 ${className}`}>
+        <div ref={mapEl} className="h-full w-full" />
+        {(loading || mapLoading) && (
+          <div className="absolute inset-0 flex items-center justify-center bg-cream-100/80 text-sm font-medium text-ink-soft">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+            지도를 준비하는 중입니다.
+          </div>
         )}
-      </section>
-
-      <aside className="space-y-4">
-        <div className="rounded-3xl border border-line bg-white p-5 shadow-card">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-base font-bold text-ink">제휴업체 목록</h2>
-              <p className="mt-1 text-xs text-ink-faint">
-                위치 등록 {locatedPartners.length}개 · 표시 {filteredPartners.length}개
+        {!clientId && (
+          <div className="absolute inset-0 flex items-center justify-center bg-cream-100/90 p-6 text-center">
+            <div className="max-w-sm">
+              <AlertCircle className="mx-auto h-7 w-7 text-amber-600" />
+              <p className="mt-3 text-sm font-semibold text-ink">
+                네이버 지도 Client ID가 필요합니다.
+              </p>
+              <p className="mt-2 text-xs leading-relaxed text-ink-soft">
+                `NEXT_PUBLIC_NAVER_MAP_CLIENT_ID` 환경변수를 설정해주세요.
               </p>
             </div>
-            <MapPin className="h-5 w-5 text-brand-500" aria-hidden />
           </div>
-        </div>
-
-        {loading ? (
-          <div className="rounded-3xl border border-line bg-white p-8 text-center text-sm text-ink-soft shadow-card">
-            <Loader2 className="mr-2 inline h-4 w-4 animate-spin" aria-hidden />
-            업체를 불러오는 중입니다.
-          </div>
-        ) : filteredPartners.length === 0 ? (
-          <div className="rounded-3xl border border-line bg-white p-8 text-center shadow-card">
-            <p className="font-bold text-ink">아직 위치 등록된 제휴업체가 없습니다.</p>
-            <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-              지도는 기본으로 {DEFAULT_CENTER.label}을 보여줍니다. 관리자에서 업체 위치와 위치 사용 여부를 설정하면 이곳에 표시됩니다.
+        )}
+        {!loading && !mapLoading && filteredCount === 0 && clientId && (
+          <div className="absolute bottom-4 left-4 right-4 rounded-2xl border border-line bg-white/95 p-4 shadow-card backdrop-blur sm:left-5 sm:right-auto sm:max-w-sm">
+            <p className="flex items-center gap-1.5 text-sm font-bold text-ink">
+              <MapPin className="h-4 w-4 text-brand-500" aria-hidden />
+              {DEFAULT_CENTER.label}
+            </p>
+            <p className="mt-1 text-xs leading-relaxed text-ink-soft">
+              아직 위치 등록된 제휴업체가 없어 기본 지역을 표시하고 있습니다.
             </p>
           </div>
-        ) : (
-          filteredPartners.map((partner) => (
-            <PartnerLocationCard
-              key={partner.id}
-              partner={partner}
-              active={partner.id === selectedPartner?.id}
-              benefitCount={benefitCountByPartner.get(partner.id) ?? 0}
-              onSelect={() => setSelectedId(partner.id)}
-            />
-          ))
         )}
-      </aside>
-    </div>
+      </div>
+
+      {error && (
+        <p className="border-t border-line bg-rose-50 px-5 py-3 text-sm text-rose-600">
+          {error}
+        </p>
+      )}
+    </>
   );
 }
 
