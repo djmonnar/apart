@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import {
   subscribeBenefits,
-  subscribePartners,
+  subscribeActivePartners,
 } from "@/lib/benefit-cms";
 import { CATEGORY_LABEL } from "@/lib/constants";
 import type { Benefit, CategoryId, Partner } from "@/lib/types";
@@ -24,7 +24,11 @@ type NaverWindow = Window & {
 };
 
 const SCRIPT_ID = "naver-map-script";
-const DEFAULT_CENTER = { lat: 35.1803, lng: 128.1076 };
+const DEFAULT_CENTER = {
+  lat: 35.1567431,
+  lng: 128.103043,
+  label: "경상남도 진주시 가좌동",
+};
 
 function loadNaverMap(clientId: string) {
   if (typeof window === "undefined") return Promise.reject();
@@ -88,7 +92,7 @@ export function NearbyPartnersMap() {
     };
 
     try {
-      const unsubPartners = subscribePartners(
+      const unsubPartners = subscribeActivePartners(
         (items) => {
           setPartners(items);
           markLoaded("partners");
@@ -171,7 +175,7 @@ export function NearbyPartnersMap() {
               : new maps.LatLng(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng);
           mapRef.current = new maps.Map(mapEl.current, {
             center,
-            zoom: centerPartner ? 15 : 13,
+            zoom: centerPartner ? 15 : 14,
             scaleControl: false,
             logoControl: true,
             mapDataControl: false,
@@ -196,7 +200,11 @@ export function NearbyPartnersMap() {
     markersRef.current.forEach((marker) => marker.setMap(null));
     markersRef.current = [];
 
-    if (filteredPartners.length === 0) return;
+    if (filteredPartners.length === 0) {
+      mapRef.current.setCenter(new maps.LatLng(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng));
+      mapRef.current.setZoom(14);
+      return;
+    }
 
     const bounds = new maps.LatLngBounds();
     filteredPartners.forEach((partner) => {
@@ -242,6 +250,7 @@ export function NearbyPartnersMap() {
               </h1>
               <p className="mt-2 text-sm leading-relaxed text-ink-soft">
                 지도에서 우리 단지 주변 제휴업체 위치와 혜택을 확인하세요.
+                제휴업체가 없을 때는 {DEFAULT_CENTER.label}을 기본으로 보여드립니다.
               </p>
             </div>
             <label className="relative block xl:w-72">
@@ -292,6 +301,17 @@ export function NearbyPartnersMap() {
               </div>
             </div>
           )}
+          {!loading && !mapLoading && filteredPartners.length === 0 && clientId && (
+            <div className="absolute bottom-4 left-4 right-4 rounded-2xl border border-line bg-white/95 p-4 shadow-card backdrop-blur sm:left-5 sm:right-auto sm:max-w-sm">
+              <p className="flex items-center gap-1.5 text-sm font-bold text-ink">
+                <MapPin className="h-4 w-4 text-brand-500" aria-hidden />
+                {DEFAULT_CENTER.label}
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-ink-soft">
+                아직 위치 등록된 제휴업체가 없어 기본 지역을 표시하고 있습니다.
+              </p>
+            </div>
+          )}
         </div>
 
         {error && (
@@ -321,9 +341,9 @@ export function NearbyPartnersMap() {
           </div>
         ) : filteredPartners.length === 0 ? (
           <div className="rounded-3xl border border-line bg-white p-8 text-center shadow-card">
-            <p className="font-bold text-ink">표시할 제휴업체가 없습니다.</p>
+            <p className="font-bold text-ink">아직 위치 등록된 제휴업체가 없습니다.</p>
             <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-              관리자에서 업체 위치와 위치 사용 여부를 설정하면 이곳에 표시됩니다.
+              지도는 기본으로 {DEFAULT_CENTER.label}을 보여줍니다. 관리자에서 업체 위치와 위치 사용 여부를 설정하면 이곳에 표시됩니다.
             </p>
           </div>
         ) : (

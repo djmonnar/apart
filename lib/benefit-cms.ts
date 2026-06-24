@@ -6,6 +6,7 @@ import {
   serverTimestamp,
   setDoc,
   updateDoc,
+  where,
   type DocumentData,
   type QuerySnapshot,
   type Unsubscribe,
@@ -266,6 +267,17 @@ export function subscribePartners(
 ): Unsubscribe {
   return onSnapshot(
     query(collection(getFirebaseDb(), PARTNERS_COLLECTION)),
+    (snap) => onChange(normalizePartnerSnapshot(snap)),
+    onError,
+  );
+}
+
+export function subscribeActivePartners(
+  onChange: (items: Partner[]) => void,
+  onError: (error: Error) => void,
+): Unsubscribe {
+  return onSnapshot(
+    query(collection(getFirebaseDb(), PARTNERS_COLLECTION), where("status", "==", "active")),
     (snap) => onChange(normalizePartnerSnapshot(snap)),
     onError,
   );
